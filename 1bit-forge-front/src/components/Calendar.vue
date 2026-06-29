@@ -10,7 +10,7 @@
             <div v-for="(cell, index) in cells" :key="index" class="calendar__cell" :class="{
                 'is-outside': !cell.isCurrentMonth,
                 'is-today': cell.isToday,
-            }">
+            }" @click="createEvent()">
                 <span class="calendar__day">{{ cell.day }}</span>
                 <CalendarEvent
                     v-for="{ event, continuesLeft, continuesRight, showTitle } in cell.events"
@@ -19,15 +19,39 @@
                     :continues-left="continuesLeft"
                     :continues-right="continuesRight"
                     :show-title="showTitle"
+                    :is-hovered="hoveredEventId === event.eventId"
+                    @pointerenter="onEventPointerEnter(event.eventId)"
+                    @pointerleave="onEventPointerLeave($event, event.eventId)"
                 />
             </div>
         </div>
+
+        <MyDrawer v-model:drawer="showDrawer">
+            <EventEdit></EventEdit>
+        </MyDrawer>
     </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import CalendarEvent from './CalendarEvent.vue'
+import MyDrawer from './MyDrawer.vue'
+
+const hoveredEventId = ref(null)
+
+function onEventPointerEnter(eventId) {
+    hoveredEventId.value = eventId
+}
+
+function onEventPointerLeave(event, eventId) {
+    const next = event.relatedTarget
+    if (next instanceof Element && next.closest(`[data-event-id="${eventId}"]`)) {
+        return
+    }
+    if (hoveredEventId.value === eventId) {
+        hoveredEventId.value = null
+    }
+}
 
 const props = defineProps({
     modelValue: {
@@ -152,6 +176,13 @@ const selectDate = (type) => {
 }
 
 defineExpose({ selectDate })
+
+
+const showDrawer = ref(false)
+
+function createEvent() {
+    showDrawer.value = true
+}
 </script>
 
 <style scoped>

@@ -1,10 +1,13 @@
 <template>
     <div
         class="event-container"
+        :data-event-id="event.eventId"
         :class="{
             'is-continues-left': continuesLeft,
             'is-continues-right': continuesRight,
+            'is-hovered': isHovered,
         }"
+        @click="clickEvent"
     >
         <p v-if="showTitle">{{ event.eventName }}</p>
         <span v-else class="event-container__spacer" aria-hidden="true"></span>
@@ -29,7 +32,17 @@ defineProps({
         type: Boolean,
         default: true,
     },
+    isHovered: {
+        type: Boolean,
+        default: false,
+    },
 })
+
+const emit = defineEmits(['clickEvent'])
+
+function clickEvent(){
+
+}
 </script>
 
 <style scoped>
@@ -44,6 +57,8 @@ defineProps({
     line-height: 1.4;
     position: relative;
     z-index: 1;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    cursor: pointer;
 }
 
 .event-container p {
@@ -55,8 +70,13 @@ defineProps({
     height: 1.4em;
 }
 
+.event-container.is-hovered {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    z-index: 2;
+}
+
 .is-continues-left {
-    
     margin-left: -1px;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
