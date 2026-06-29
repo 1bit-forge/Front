@@ -12,6 +12,11 @@
                 'is-today': cell.isToday,
             }">
                 <span class="calendar__day">{{ cell.day }}</span>
+                <CalendarEvent
+                    v-for="event in cell.events"
+                    :key="event.eventId"
+                    :event="event"
+                />
             </div>
         </div>
     </div>
@@ -19,17 +24,33 @@
 
 <script setup>
 import { computed } from 'vue'
+import CalendarEvent from './CalendarEvent.vue'
 
 const props = defineProps({
     modelValue: {
         type: Date,
         default: () => new Date(),
     },
+    eventList: {
+        type: Array,
+        default: []
+    }
 })
 
 const emit = defineEmits(['update:modelValue'])
 
 const weekdays = ['日', '一', '二', '三', '四', '五', '六']
+
+function toLocalDate(date) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
+function isDateInEventRange(date, event) {
+    const cellDate = toLocalDate(date)
+    const startDate = toLocalDate(new Date(event.startTime))
+    const endDate = toLocalDate(new Date(event.endTime))
+    return cellDate >= startDate && cellDate <= endDate
+}
 
 const totalDays = computed(() => {
     const current = props.modelValue
@@ -68,6 +89,9 @@ const cells = computed(() => {
                 date.getFullYear() === todayYear &&
                 date.getMonth() === todayMonth &&
                 date.getDate() === todayDay,
+            events: props.eventList.filter((event) =>
+                isDateInEventRange(date, event)
+            ),
         }
     })
 })
@@ -119,6 +143,7 @@ defineExpose({ selectDate })
     grid-template-columns: repeat(7, 1fr);
     border-right: 1px solid rgba(60, 60, 60, 0.12);
     border-bottom: 1px solid rgba(60, 60, 60, 0.12);
+
 }
 
 .calendar__grid-35 {
@@ -132,7 +157,7 @@ defineExpose({ selectDate })
 .calendar__cell {
     border-top: 1px solid rgba(60, 60, 60, 0.12);
     border-left: 1px solid rgba(60, 60, 60, 0.12);
-    padding: 8px;
+    /* padding: 8px; */
     color: var(--Black);
 }
 
@@ -151,5 +176,7 @@ defineExpose({ selectDate })
 .calendar__day {
     display: block;
     line-height: 1;
+
+    margin: 8px;
 }
 </style>
