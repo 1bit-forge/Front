@@ -41,21 +41,21 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to) => {
-  const authenticated = isAuthenticated()
-  const isGuestRoute = to.matched.some((record) => record.meta.guest)
-  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
+// router.beforeEach((to) => {
+//   const authenticated = isAuthenticated()
+//   const isGuestRoute = to.matched.some((record) => record.meta.guest)
+//   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
 
-  if (isGuestRoute && authenticated) {
-    return { name: 'calendar' }
-  }
+//   if (isGuestRoute && authenticated) {
+//     return { name: 'calendar' }
+//   }
 
-  if (requiresAuth && !authenticated) {
-    return {
-      name: 'login',
-      query: { redirect: to.fullPath },
-    }
-  }
-})
+//   if (requiresAuth && !authenticated) {
+//     return {
+//       name: 'login',
+//       query: { redirect: to.fullPath },
+//     }
+//   }
+// })
 
 export default router

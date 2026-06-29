@@ -13,9 +13,12 @@
             }">
                 <span class="calendar__day">{{ cell.day }}</span>
                 <CalendarEvent
-                    v-for="event in cell.events"
-                    :key="event.eventId"
+                    v-for="{ event, continuesLeft, continuesRight, showTitle } in cell.events"
+                    :key="`${event.eventId}-${cell.date.getTime()}`"
                     :event="event"
+                    :continues-left="continuesLeft"
+                    :continues-right="continuesRight"
+                    :show-title="showTitle"
                 />
             </div>
         </div>
@@ -50,6 +53,36 @@ function isDateInEventRange(date, event) {
     const startDate = toLocalDate(new Date(event.startTime))
     const endDate = toLocalDate(new Date(event.endTime))
     return cellDate >= startDate && cellDate <= endDate
+}
+
+function isSameDay(a, b) {
+    const dateA = toLocalDate(a)
+    const dateB = toLocalDate(b)
+    return (
+        dateA.getFullYear() === dateB.getFullYear() &&
+        dateA.getMonth() === dateB.getMonth() &&
+        dateA.getDate() === dateB.getDate()
+    )
+}
+
+function isEventStartDay(date, event) {
+    return isSameDay(date, new Date(event.startTime))
+}
+
+function isEventEndDay(date, event) {
+    return isSameDay(date, new Date(event.endTime))
+}
+
+function continuesLeft(date, event) {
+    if (isEventStartDay(date, event)) return false
+    if (date.getDay() === 0) return false
+    return true
+}
+
+function continuesRight(date, event) {
+    if (isEventEndDay(date, event)) return false
+    if (date.getDay() === 6) return false
+    return true
 }
 
 const totalDays = computed(() => {
@@ -89,9 +122,14 @@ const cells = computed(() => {
                 date.getFullYear() === todayYear &&
                 date.getMonth() === todayMonth &&
                 date.getDate() === todayDay,
-            events: props.eventList.filter((event) =>
-                isDateInEventRange(date, event)
-            ),
+            events: props.eventList
+                .filter((event) => isDateInEventRange(date, event))
+                .map((event) => ({
+                    event,
+                    continuesLeft: continuesLeft(date, event),
+                    continuesRight: continuesRight(date, event),
+                    showTitle: !continuesLeft(date, event),
+                })),
         }
     })
 })
@@ -157,7 +195,7 @@ defineExpose({ selectDate })
 .calendar__cell {
     border-top: 1px solid rgba(60, 60, 60, 0.12);
     border-left: 1px solid rgba(60, 60, 60, 0.12);
-    /* padding: 8px; */
+    overflow: visible;
     color: var(--Black);
 }
 
