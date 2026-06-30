@@ -12,29 +12,24 @@
                 'is-today': cell.isToday,
             }" @click="createEvent()">
                 <span class="calendar__day">{{ cell.day }}</span>
-                <CalendarEvent
-                    v-for="{ event, continuesLeft, continuesRight, showTitle } in cell.events"
-                    :key="`${event.eventId}-${cell.date.getTime()}`"
-                    :event="event"
-                    :continues-left="continuesLeft"
-                    :continues-right="continuesRight"
-                    :show-title="showTitle"
-                    :is-hovered="hoveredEventId === event.eventId"
-                    @pointerenter="onEventPointerEnter(event.eventId)"
-                    @pointerleave="onEventPointerLeave($event, event.eventId)"
-                />
+                <CalendarEvent v-for="{ event, continuesLeft, continuesRight, showTitle } in cell.events"
+                    :key="`${event.eventId}-${cell.date.getTime()}`" :event="event" :continues-left="continuesLeft"
+                    :continues-right="continuesRight" :show-title="showTitle"
+                    :is-hovered="hoveredEventId === event.eventId" @pointerenter="onEventPointerEnter(event.eventId)"
+                    @pointerleave="onEventPointerLeave($event, event.eventId)" @click.stop="editEvent(event)" class="boxEvents"/>
             </div>
         </div>
 
-        <MyDrawer v-model:drawer="showDrawer">
-            <EventEdit></EventEdit>
+        <MyDrawer v-model:drawer="showDrawer" :title="drawerTitle">
+            <EventEdit :event-data="eventData" :mode="drawerMode"/>
         </MyDrawer>
     </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import CalendarEvent from './CalendarEvent.vue'
+import EventEdit from './EventEdit.vue'
 import MyDrawer from './MyDrawer.vue'
 
 const hoveredEventId = ref(null)
@@ -179,8 +174,22 @@ defineExpose({ selectDate })
 
 
 const showDrawer = ref(false)
+const drawerTitle = ref("")
+const eventData = ref(null)
+const drawerMode = ref("")
 
 function createEvent() {
+    eventData.value = null
+    drawerTitle.value = "創建事件"
+    drawerMode.value = "DETAIL"
+    showDrawer.value = true
+
+}
+
+function editEvent(event) {
+    eventData.value = event
+    drawerTitle.value = "編輯事件"
+    drawerMode.value = "EDIT"
     showDrawer.value = true
 }
 </script>
@@ -247,5 +256,9 @@ function createEvent() {
     line-height: 1;
 
     margin: 8px;
+}
+
+.boxEvents{
+    margin-bottom: 0.5vh;
 }
 </style>

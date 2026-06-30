@@ -1,5 +1,5 @@
 <template>
-    <el-drawer v-model="visible" title="I am the title" direction="rtl">
+    <el-drawer v-model="visible" :title="title" direction="rtl" style="max-width: 600px">
         <slot></slot>
         <template #footer>
             <div style="flex: auto">
@@ -12,13 +12,16 @@
 
 <script setup>
 import { computed } from 'vue'
-import EventEdit from './EventEdit.vue';
 
 const props = defineProps({
     drawer: {
         type: Boolean,
         default: false,
     },
+    title: {
+        type: String,
+        default: ""
+    }
 
 })
 

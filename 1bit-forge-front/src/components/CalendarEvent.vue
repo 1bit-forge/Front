@@ -7,7 +7,7 @@
             'is-continues-right': continuesRight,
             'is-hovered': isHovered,
         }"
-        @click="clickEvent"
+        
     >
         <p v-if="showTitle">{{ event.eventName }}</p>
         <span v-else class="event-container__spacer" aria-hidden="true"></span>
@@ -15,7 +15,7 @@
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
     event: {
         type: Object,
         required: true,
@@ -38,11 +38,11 @@ defineProps({
     },
 })
 
-const emit = defineEmits(['clickEvent'])
+// const emit = defineEmits(['click'])
 
-function clickEvent(){
-
-}
+// function onClick() {
+//     emit('click', props.event)
+// }
 </script>
 
 <style scoped>
