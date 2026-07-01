@@ -32,7 +32,7 @@
         </div>
       </el-aside>
       <el-container>
-        <el-header class="layout-header" />
+        <el-header v-if="showHeader" class="layout-header" />
         <el-main>
           <router-view />
         </el-main>
@@ -43,7 +43,11 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { Calendar, Setting } from '@element-plus/icons-vue'
+
+const route = useRoute()
+const showHeader = computed(() => route.meta.header !== false)
 
 const navItems = [
   { name: 'calendar', label: 'Calendar', icon: Calendar, exact: true, footer: false },

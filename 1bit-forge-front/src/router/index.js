@@ -30,6 +30,7 @@ const router = createRouter({
           path: '',
           name: 'calendar',
           component: CalendarView,
+          meta: { header: false },
         },
         {
           path: 'settings',
