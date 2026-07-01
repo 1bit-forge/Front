@@ -17,7 +17,7 @@
             </el-button-group>
         </div>
 
-        <calendar ref="calendarRef" v-model="value" :eventList="mockDataList"/>
+        <calendar ref="calendarRef" v-model="value" :eventList="mockDataList" />
 
     </div>
 
@@ -35,34 +35,48 @@ const calendarRef = ref()
 
 const mockDataList = reactive([
     {
-      "eventId": "a2b9e45127b9e4a321cc443456789abc",
-      "eventName": "GYM",
-      "description": "go gym with Isaac",
-      "startTime": "2026-06-26T08:30:00+08:00",
-      "endTime": "2026-06-26T10:30:00+08:00"
+        "eventId": "a2b9e45127b9e4a321cc443456789abc",
+        "eventName": "GYM",
+        "description": "go gym with Isaac",
+        "startTime": "2026-06-26T08:30:00+08:00",
+        "endTime": "2026-06-26T10:30:00+08:00"
     },
     {
-      "eventId": "a2b9e434b9e4a321cc45451276789abc",
-      "eventName": "Lunch",
-      "description": "lunch with family",
-      "startTime": "2026-06-26T12:30:00+08:00",
-      "endTime": "2026-06-26T13:30:00+08:00"
+        "eventId": "a2b9e434b9e4a321cc45451276789abc",
+        "eventName": "Lunch",
+        "description": "lunch with family",
+        "startTime": "2026-06-26T12:30:00+08:00",
+        "endTime": "2026-06-26T13:30:00+08:00"
     },
     {
-      "eventId": "b3c9e56238cae5b432dd55456789def",
-      "eventName": "Do Project",
-      "description": "Make Frontend Code",
-      "startTime": "2026-06-12T09:00:00+08:00",
-      "endTime": "2026-06-15T11:00:00+08:00"
+        "eventId": "a2b9e434b9e4a321cc45451276789abc",
+        "eventName": "Lunch",
+        "description": "lunch with family",
+        "startTime": "2026-06-26T12:30:00+08:00",
+        "endTime": "2026-06-26T13:30:00+08:00"
     },
     {
-      "eventId": "c4d0f67349dbe6c543ee6656789ghi",
-      "eventName": "GYM",
-      "description": "go gym with Isaac",
-      "startTime": "2026-06-19T15:30:00+08:00",
-      "endTime": "2026-06-19T17:30:00+08:00"
+        "eventId": "a2b9e434b9e4a321cc45451276789abc",
+        "eventName": "Lunch",
+        "description": "lunch with family",
+        "startTime": "2026-06-26T12:30:00+08:00",
+        "endTime": "2026-06-26T13:30:00+08:00"
+    },
+    {
+        "eventId": "b3c9e56238cae5b432dd55456789def",
+        "eventName": "Do Project",
+        "description": "Make Frontend Code",
+        "startTime": "2026-06-12T09:00:00+08:00",
+        "endTime": "2026-06-15T11:00:00+08:00"
+    },
+    {
+        "eventId": "c4d0f67349dbe6c543ee6656789ghi",
+        "eventName": "GYM",
+        "description": "go gym with Isaac",
+        "startTime": "2026-06-19T15:30:00+08:00",
+        "endTime": "2026-06-19T17:30:00+08:00"
     }
-  ])
+])
 
 const headerLabel = computed(() => {
     if (viewMode.value === 'day') {

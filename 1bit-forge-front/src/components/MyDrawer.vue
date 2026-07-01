@@ -1,5 +1,5 @@
 <template>
-    <el-drawer v-model="visible" :title="title" direction="rtl" style="max-width: 600px">
+    <el-drawer v-model="visible" :title="title" direction="rtl" style="max-width: 600px; min-width: 500px">
         <slot></slot>
         <template #footer>
             <div style="flex: auto">
@@ -21,8 +21,15 @@ const props = defineProps({
     title: {
         type: String,
         default: ""
+    },
+    minWidth: {
+        type: String,
+        default: "400px"
+    },
+    maxWidth: {
+        type: String,
+        default: "600px"
     }
-
 })
 
 const emit = defineEmits(['update:drawer'])

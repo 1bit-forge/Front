@@ -6,7 +6,8 @@
             </span>
         </div>
 
-        <div class="calendar__grid" :class="totalDays === 35 ? 'calendar__grid-35' : 'calendar__grid-42'">
+        <div ref="calendarGridRef" class="calendar__grid"
+            :class="totalDays === 35 ? 'calendar__grid-35' : 'calendar__grid-42'">
             <div v-for="(cell, index) in cells" :key="index" class="calendar__cell" :class="{
                 'is-outside': !cell.isCurrentMonth,
                 'is-today': cell.isToday,
@@ -16,23 +17,59 @@
                     :key="`${event.eventId}-${cell.date.getTime()}`" :event="event" :continues-left="continuesLeft"
                     :continues-right="continuesRight" :show-title="showTitle"
                     :is-hovered="hoveredEventId === event.eventId" @pointerenter="onEventPointerEnter(event.eventId)"
-                    @pointerleave="onEventPointerLeave($event, event.eventId)" @click.stop="editEvent(event)" class="boxEvents"/>
+                    @pointerleave="onEventPointerLeave($event, event.eventId)" @click.stop="editEvent(event)"
+                    class="boxEvents" />
+                <el-popover placement="left" :width="200" trigger="hover" v-if="cell.hasOverflow">
+                    <template #reference>
+                        <span class="calendar__cell-overflow">
+                            還有+{{ cell.overflowCount }}
+                        </span>
+                    </template>
+                    <CalendarEvent v-for="{ event, continuesLeft, continuesRight, showTitle } in cell.allEvents"
+                        :key="`${event.eventId}-${cell.date.getTime()}`" :event="event" :continues-left="continuesLeft"
+                        :continues-right="continuesRight" :show-title="showTitle"
+                        :is-hovered="popoverHoveredEventId === event.eventId"
+                        @pointerenter="onPopoverEventPointerEnter(event.eventId)"
+                        @pointerleave="onPopoverEventPointerLeave($event, event.eventId)" @click.stop="editEvent(event)"
+                        class="boxEvents" />
+                </el-popover>
+
             </div>
         </div>
 
         <MyDrawer v-model:drawer="showDrawer" :title="drawerTitle">
-            <EventEdit :event-data="eventData" :mode="drawerMode"/>
+            <EventEdit :event-data="eventData" :mode="drawerMode" />
         </MyDrawer>
     </div>
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, onMounted, nextTick } from 'vue'
 import CalendarEvent from './CalendarEvent.vue'
 import EventEdit from './EventEdit.vue'
 import MyDrawer from './MyDrawer.vue'
 
 const hoveredEventId = ref(null)
+const popoverHoveredEventId = ref(null)
+const cellHeight = ref(100)
+const calendarGridRef = ref(null)
+const showPopover = ref(false)
+
+function measureCellHeight() {
+    if (calendarGridRef.value) {
+        const cells = calendarGridRef.value.querySelectorAll('.calendar__cell')
+        if (cells.length > 0) {
+            cellHeight.value = cells[0].offsetHeight
+        }
+    }
+}
+
+onMounted(() => {
+    nextTick(() => {
+        measureCellHeight()
+        window.addEventListener('resize', measureCellHeight)
+    })
+})
 
 function onEventPointerEnter(eventId) {
     hoveredEventId.value = eventId
@@ -45,6 +82,20 @@ function onEventPointerLeave(event, eventId) {
     }
     if (hoveredEventId.value === eventId) {
         hoveredEventId.value = null
+    }
+}
+
+function onPopoverEventPointerEnter(eventId) {
+    popoverHoveredEventId.value = eventId
+}
+
+function onPopoverEventPointerLeave(event, eventId) {
+    const next = event.relatedTarget
+    if (next instanceof Element && next.closest(`[data-event-id="${eventId}"]`)) {
+        return
+    }
+    if (popoverHoveredEventId.value === eventId) {
+        popoverHoveredEventId.value = null
     }
 }
 
@@ -62,6 +113,9 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const weekdays = ['日', '一', '二', '三', '四', '五', '六']
+
+const EVENT_HEIGHT = 22
+const DAY_LABEL_HEIGHT = 32
 
 function toLocalDate(date) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate())
@@ -129,9 +183,24 @@ const cells = computed(() => {
     const todayMonth = today.getMonth()
     const todayDay = today.getDate()
 
+    const maxVisible = Math.max(1, Math.floor((cellHeight.value - DAY_LABEL_HEIGHT) / EVENT_HEIGHT))
+
     return Array.from({ length: totalDays.value }, (_, index) => {
         const date = new Date(startDate)
         date.setDate(startDate.getDate() + index)
+
+        const allEvents = props.eventList
+            .filter((event) => isDateInEventRange(date, event))
+            .map((event) => ({
+                event,
+                continuesLeft: continuesLeft(date, event),
+                continuesRight: continuesRight(date, event),
+                showTitle: !continuesLeft(date, event),
+            }))
+
+        const hasOverflow = allEvents.length > maxVisible
+        const visibleCount = hasOverflow ? maxVisible - 1 : maxVisible
+        const overflowCount = allEvents.length - visibleCount
 
         return {
             date,
@@ -141,14 +210,10 @@ const cells = computed(() => {
                 date.getFullYear() === todayYear &&
                 date.getMonth() === todayMonth &&
                 date.getDate() === todayDay,
-            events: props.eventList
-                .filter((event) => isDateInEventRange(date, event))
-                .map((event) => ({
-                    event,
-                    continuesLeft: continuesLeft(date, event),
-                    continuesRight: continuesRight(date, event),
-                    showTitle: !continuesLeft(date, event),
-                })),
+            events: allEvents.slice(0, visibleCount),
+            allEvents,
+            hasOverflow,
+            overflowCount,
         }
     })
 })
@@ -258,7 +323,24 @@ function editEvent(event) {
     margin: 8px;
 }
 
-.boxEvents{
+.boxEvents {
     margin-bottom: 0.5vh;
+}
+
+.calendar__cell-overflow {
+    width: 95%;
+    margin: 0 auto;
+    display: block;
+    font-size: 12px;
+    color: rgba(60, 60, 60, 0.6);
+    margin-top: 2px;
+}
+
+.calendar__cell-overflow:hover {
+    cursor: pointer;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    border-radius: 8px;
+    z-index: 2;
 }
 </style>
