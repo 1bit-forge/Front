@@ -13,6 +13,8 @@
                 'is-today': cell.isToday,
             }" @click="createEvent()">
                 <span class="calendar__day">{{ cell.day }}</span>
+
+                <!-- 事件列表 -->
                 <CalendarEvent v-for="{ event, continuesLeft, continuesRight, showTitle } in cell.events"
                     :key="`${event.eventId}-${cell.date.getTime()}`" :event="event" :continues-left="continuesLeft"
                     :continues-right="continuesRight" :show-title="showTitle"
@@ -25,13 +27,20 @@
                             還有+{{ cell.overflowCount }}
                         </span>
                     </template>
-                    <CalendarEvent v-for="{ event, continuesLeft, continuesRight, showTitle } in cell.allEvents"
-                        :key="`${event.eventId}-${cell.date.getTime()}`" :event="event" :continues-left="continuesLeft"
-                        :continues-right="continuesRight" :show-title="showTitle"
-                        :is-hovered="popoverHoveredEventId === event.eventId"
-                        @pointerenter="onPopoverEventPointerEnter(event.eventId)"
-                        @pointerleave="onPopoverEventPointerLeave($event, event.eventId)" @click.stop="editEvent(event)"
-                        class="boxEvents" />
+                    <div>
+                        <div>
+                            <p>週x</p>
+                            <p>{{ cell.day }}</p>
+                        </div>
+                        <CalendarEvent v-for="{ event, continuesLeft, continuesRight, showTitle } in cell.allEvents"
+                            :key="`${event.eventId}-${cell.date.getTime()}`" :event="event"
+                            :continues-left="continuesLeft" :continues-right="continuesRight" :show-title="showTitle"
+                            :is-hovered="popoverHoveredEventId === event.eventId"
+                            @pointerenter="onPopoverEventPointerEnter(event.eventId)"
+                            @pointerleave="onPopoverEventPointerLeave($event, event.eventId)"
+                            @click.stop="editEvent(event)" class="boxEvents" />
+                    </div>
+
                 </el-popover>
 
             </div>
@@ -113,6 +122,9 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const weekdays = ['日', '一', '二', '三', '四', '五', '六']
+function weekMapping(weekNumber){
+
+}
 
 const EVENT_HEIGHT = 22
 const DAY_LABEL_HEIGHT = 32
