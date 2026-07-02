@@ -1,13 +1,9 @@
 import { request } from '@/api/client'
 
-export function register({ account, username, password }) {
-  return request('POST', '/api/calendar_core/auth/register', {
-    body: { account, username, password },
-  })
+export function register(params) {
+  return request('POST', '/api/users/register', params)
 }
 
-export function login({ account, password }) {
-  return request('POST', '/api/calendar_core/auth/login', {
-    body: { account, password },
-  })
+export function login(params) {
+  return request('POST', '/api/users/login', params)
 }

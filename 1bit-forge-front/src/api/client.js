@@ -15,8 +15,7 @@ export class ApiError extends Error {
  * @param {string} path
  * @param {{ body?: object, auth?: boolean }} [options]
  */
-export async function request(method, path, options = {}) {
-  const { body, auth = false } = options
+export async function request(method, path, body, auth = false) {
   const headers = { 'Content-Type': 'application/json' }
 
   if (auth) {
