@@ -47,7 +47,7 @@
         </div>
 
         <MyDrawer v-model:drawer="showDrawer" :title="drawerTitle">
-            <EventEdit :event-data="eventData" :mode="drawerMode" />
+            <EventEdit :event-data="eventData" :mode="drawerMode" calendarType="MONTH"/>
         </MyDrawer>
     </div>
 </template>

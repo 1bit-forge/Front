@@ -24,12 +24,21 @@ const props = defineProps({
         type: Number,
         required: true,
     },
+    left: {
+        type: String,
+        default: '0%',
+    },
+    width: {
+        type: String,
+        default: '100%',
+    },
 })
 
 /**
  * 統一由本元件處理事件區塊定位：
  * - position: absolute
  * - top / height 由父層傳入，已經按照「1 分鐘 = 1px」換算完成。
+ * - left / width 由父層傳入百分比，用於重疊事件並排。
  *
  * 為避免極短事件無法操作，這裡額外加上最小高度保護。
  */
@@ -39,6 +48,8 @@ const eventStyle = computed(() => ({
     position: 'absolute',
     top: `${props.top}px`,
     height: `${Math.max(props.height, MIN_EVENT_HEIGHT)}px`,
+    left: props.left,
+    width: props.width,
 }))
 </script>
 

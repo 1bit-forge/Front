@@ -8,9 +8,15 @@
                 <el-input v-model="form.description" type="textarea" />
             </el-form-item>
             <el-form-item label="Time Range">
-                <el-date-picker v-model="form.timeRange" type="datetimerange" start-placeholder="Start date"
-                    end-placeholder="End date" format="YYYY-MM-DD HH:mm:ss" date-format="YYYY/MM/DD ddd"
-                    time-format="A hh:mm:ss" />
+                <el-date-picker v-if="calendarType == 'MONTH'" v-model="form.timeRange" type="datetimerange"
+                    start-placeholder="Start date" end-placeholder="End date" format="YYYY-MM-DD HH:mm"
+                    date-format="YYYY/MM/DD ddd" time-format="A hh:mm" />
+                <div v-if="calendarType == 'DAY'" class="demo-time-range">
+                    <el-time-select v-model="form.startTime" style="width: 180px" :max-time="form.endTime"
+                        placeholder="Start time" start="00:00" step="00:15" end="23:59" />
+                    <el-time-select v-model="form.endTime" style="width: 180px" :min-time="form.startTime" placeholder="End time"
+                        start="00:00" step="00:15" end="23:59" />
+                </div>
             </el-form-item>
             <el-form-item label="重複">
                 <el-select v-model="form.loop" placeholder="please select your zone" style="max-width: 300px">
@@ -41,15 +47,19 @@ const props = defineProps({
     mode: {
         type: String,
         default: "DETAIL"
-    }
+    },
+    calendarType: String
 })
 
 const form = reactive({
+    eventId: '',
     eventName: '',
     description: '',
     timeRange: null,
     loop: '',
-    autoReschedule: true
+    autoReschedule: true,
+    startTime: '',
+    endTime: ''
 })
 
 const loopOptions = [
@@ -77,13 +87,17 @@ const loopOptions = [
 
 function syncFormFromEvent(data) {
     if (!data) {
+        form.eventId = ''
         form.eventName = ''
         form.description = ''
         form.loop = ''
         form.autoReschedule = true
         form.timeRange = null
+        form.startTime = ''
+        form.endTime = ''
         return
     }
+    form.eventId = data.eventId ?? ''
     form.eventName = data.eventName ?? ''
     form.description = data.description ?? ''
     form.loop = data.loop ?? ''
@@ -91,6 +105,8 @@ function syncFormFromEvent(data) {
     form.timeRange = data.startTime && data.endTime
         ? [new Date(data.startTime), new Date(data.endTime)]
         : null
+    form.startTime = data.startTime.slice(11, 16)
+    form.endTime = data.endTime.slice(11, 16)
 }
 
 watch(() => props.eventData, syncFormFromEvent, { immediate: true })
@@ -126,5 +142,11 @@ function deleteEvent() {
 
     display: flex;
     justify-content: end;
+}
+
+.demo-time-range{
+    width: 100%;
+    display: flex;
+    justify-content: space-between !important;
 }
 </style>
