@@ -7,8 +7,9 @@
                 <span class="calendar-header__label">{{ headerLabel }}</span>
             </div>
             <div>
-                <el-select v-model="calendarMode" placeholder="Select" style="width: 100px; margin-right: 2vw;" >
-                    <el-option v-for="item in calendarModeOption" :key="item.value" :label="item.label" :value="item.value" />
+                <el-select v-model="calendarMode" placeholder="Select" style="width: 100px; margin-right: 2vw;">
+                    <el-option v-for="item in calendarModeOption" :key="item.value" :label="item.label"
+                        :value="item.value" />
                 </el-select>
                 <el-button-group>
                     <el-button @click="selectDate('prev-month')">
@@ -22,18 +23,17 @@
                     </el-button>
                 </el-button-group>
             </div>
-
         </div>
-
-        <calendar ref="calendarRef" v-model="value" :eventList="mockDataList" />
-
+        <calendar v-if="calendarMode === 'month'" ref="calendarRef" v-model="value" :eventList="mockDataList" />
+        <DayView v-else-if="calendarMode === 'day'" :eventList="dayViewMockData"></DayView>
     </div>
 
 </template>
 
 <script setup>
 
-import Calendar from '@/components/Calendar.vue'
+import Calendar from '@/components/Calendar/Calendar.vue'
+import DayView from '@/components/DayView/DayView.vue'
 import { computed, reactive, ref } from 'vue'
 
 
@@ -43,14 +43,14 @@ const calendarRef = ref()
 const calendarMode = ref('month')
 
 const calendarModeOption = [
-  {
-    value: 'month',
-    label: '月',
-  },
-  {
-    value: 'day',
-    label: '日',
-  },
+    {
+        value: 'month',
+        label: '月',
+    },
+    {
+        value: 'day',
+        label: '日',
+    },
 ]
 
 const mockDataList = reactive([
@@ -97,6 +97,8 @@ const mockDataList = reactive([
         "endTime": "2026-06-19T17:30:00+08:00"
     }
 ])
+
+const dayViewMockData = reactive([])
 
 const headerLabel = computed(() => {
     if (viewMode.value === 'day') {

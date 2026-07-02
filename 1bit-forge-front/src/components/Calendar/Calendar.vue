@@ -55,8 +55,8 @@
 <script setup>
 import { computed, reactive, ref, onMounted, nextTick } from 'vue'
 import CalendarEvent from './CalendarEvent.vue'
-import EventEdit from './EventEdit.vue'
-import MyDrawer from './MyDrawer.vue'
+import EventEdit from '../EventEdit.vue'
+import MyDrawer from '../MyDrawer.vue'
 
 const hoveredEventId = ref(null)
 const popoverHoveredEventId = ref(null)
