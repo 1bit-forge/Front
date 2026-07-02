@@ -3,18 +3,26 @@
     <div class="calendar-view">
 
         <div class="calendar-header">
-            <span class="calendar-header__label">{{ headerLabel }}</span>
-            <el-button-group>
-                <el-button size="small" @click="selectDate('prev-month')">
-                    上個月
-                </el-button>
-                <el-button size="small" @click="selectDate('today')">
-                    今天
-                </el-button>
-                <el-button size="small" @click="selectDate('next-month')">
-                    下個月
-                </el-button>
-            </el-button-group>
+            <div>
+                <span class="calendar-header__label">{{ headerLabel }}</span>
+            </div>
+            <div>
+                <el-select v-model="calendarMode" placeholder="Select" style="width: 100px; margin-right: 2vw;" >
+                    <el-option v-for="item in calendarModeOption" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+                <el-button-group>
+                    <el-button @click="selectDate('prev-month')">
+                        上個月
+                    </el-button>
+                    <el-button @click="selectDate('today')">
+                        今天
+                    </el-button>
+                    <el-button @click="selectDate('next-month')">
+                        下個月
+                    </el-button>
+                </el-button-group>
+            </div>
+
         </div>
 
         <calendar ref="calendarRef" v-model="value" :eventList="mockDataList" />
@@ -32,6 +40,18 @@ import { computed, reactive, ref } from 'vue'
 const value = ref(new Date())
 const viewMode = ref('month')
 const calendarRef = ref()
+const calendarMode = ref('month')
+
+const calendarModeOption = [
+  {
+    value: 'month',
+    label: '月',
+  },
+  {
+    value: 'day',
+    label: '日',
+  },
+]
 
 const mockDataList = reactive([
     {
@@ -117,7 +137,7 @@ const selectDate = (type) => {
 }
 
 .calendar-header__label {
-    font-size: 16px;
+    font-size: clamp(18px, 4vw, 28px);
     font-weight: 500;
 }
 

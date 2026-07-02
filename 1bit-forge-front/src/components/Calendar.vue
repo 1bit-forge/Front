@@ -28,8 +28,8 @@
                         </span>
                     </template>
                     <div>
-                        <div>
-                            <p>週x</p>
+                        <div class="popover-dayInfo">
+                            <p>週{{ weekMapping(cell.date.getDay()) }}</p>
                             <p>{{ cell.day }}</p>
                         </div>
                         <CalendarEvent v-for="{ event, continuesLeft, continuesRight, showTitle } in cell.allEvents"
@@ -123,7 +123,16 @@ const emit = defineEmits(['update:modelValue'])
 
 const weekdays = ['日', '一', '二', '三', '四', '五', '六']
 function weekMapping(weekNumber){
-
+    const dayMap = {
+        0: "日",
+        1: "一",
+        2: "二",
+        3: "三",
+        4: "四",
+        5: "五",
+        6: "六"
+    }
+    return dayMap[weekNumber]
 }
 
 const EVENT_HEIGHT = 22
@@ -354,5 +363,13 @@ function editEvent(event) {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
     border-radius: 8px;
     z-index: 2;
+}
+
+.popover-dayInfo{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1vh;
+    cursor: default;
 }
 </style>
