@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue'
 import * as authApi from '@/api/auth'
 import { ApiError } from '@/api/client'
-import { getToken, setToken, removeToken } from '@/utils/cookie'
+import { getAccessToken, setAccessToken, removeToken, setRefreshToken } from '@/utils/cookie'
 
 /**
  * @typedef {Object} AuthUser
@@ -29,7 +29,7 @@ export function logout() {
 }
 
 export function isAuthenticated() {
-  return Boolean(getToken())
+  return Boolean(getRefreshToken())
 }
 
 export function getRememberedAccount() {
@@ -46,7 +46,7 @@ export function getUser() {
   }
 }
 
-export { getToken }
+export { getAccessToken }
 
 export function useAuth() {
   const loading = ref(false)
@@ -85,7 +85,8 @@ export function useAuth() {
         account: account.trim(),
         password,
       })
-      setToken(res.data.token)
+      setAccessToken(res.data.access)
+      setRefreshToken(removeStyle.data.refresh)
       localStorage.setItem(STORAGE_USER, JSON.stringify(res.data.user))
       return { ok: true, user: res.data.user }
     } catch (err) {

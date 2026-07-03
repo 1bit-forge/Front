@@ -8,11 +8,12 @@ import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 // https://vite.dev/config/
+
 export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8000/',
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
     },

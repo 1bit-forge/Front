@@ -1,6 +1,7 @@
 /** Cookie 讀寫工具 */
 
-const TOKEN_KEY = 'lumina_auth_token'
+const ACCESS_TOKEN_KEY = 'access_token'
+const REFRESH_TOKEN_KEY = 'refresh_token'
 const TOKEN_MAX_AGE_DAYS = 7
 
 export function getCookie(name) {
@@ -24,14 +25,23 @@ export function removeCookie(name) {
   document.cookie = `${encodeURIComponent(name)}=; Max-Age=0; Path=/; SameSite=Lax`
 }
 
-export function getToken() {
-  return getCookie(TOKEN_KEY)
+export function getAccessToken() {
+  return getCookie(ACCESS_TOKEN_KEY)
 }
 
-export function setToken(token) {
-  setCookie(TOKEN_KEY, token)
+export function setAccessToken(token) {
+  setCookie(ACCESS_TOKEN_KEY, token)
+}
+
+export function getRefreshToken(){
+  return getCookie(REFRESH_TOKEN_KEY)
+}
+
+export function setRefreshToken(token) {
+  setCookie(REFRESH_TOKEN_KEY, token)
 }
 
 export function removeToken() {
-  removeCookie(TOKEN_KEY)
+  removeCookie(ACCESS_TOKEN_KEY)
+  removeCookie(REFRESH_TOKEN_KEY);
 }
