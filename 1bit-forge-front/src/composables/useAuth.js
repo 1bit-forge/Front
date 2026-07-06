@@ -86,7 +86,7 @@ export function useAuth() {
         password,
       })
       setAccessToken(res.data.access)
-      setRefreshToken(removeStyle.data.refresh)
+      setRefreshToken(res.data.refresh)
       localStorage.setItem(STORAGE_USER, JSON.stringify(res.data.user))
       return { ok: true, user: res.data.user }
     } catch (err) {
