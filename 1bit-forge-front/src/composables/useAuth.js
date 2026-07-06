@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue'
 import * as authApi from '@/api/auth'
 import { ApiError } from '@/api/client'
-import { getAccessToken, setAccessToken, removeToken, setRefreshToken } from '@/utils/cookie'
+import { getAccessToken, setAccessToken, removeToken, setRefreshToken, getRefreshToken } from '@/utils/cookie'
 
 /**
  * @typedef {Object} AuthUser
