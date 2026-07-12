@@ -20,11 +20,11 @@
                     :continues-left="continuesLeft" :continues-right="continuesRight" :show-title="showTitle"
                     :is-hovered="hoveredEventId === event.eventId" @pointerenter="onEventPointerEnter(event.eventId)"
                     @pointerleave="onEventPointerLeave($event, event.eventId)" @click.stop="editEvent(event)"
-                    :style="{ top: `${DAY_LABEL_HEIGHT + rowIndex * EVENT_HEIGHT}px` }" class="boxEvents" />
+                    :style="{ top: `${DAY_LABEL_HEIGHT + rowIndex * (EVENT_HEIGHT + EVENT_GAP)}px` }" class="boxEvents" />
                 <el-popover placement="left" :width="200" trigger="hover" v-if="cell.hasOverflow">
                     <template #reference>
                         <span class="calendar__cell-overflow"
-                            :style="{ top: `${DAY_LABEL_HEIGHT + (maxVisible - 1) * EVENT_HEIGHT}px` }">
+                            :style="{ top: `${DAY_LABEL_HEIGHT + (maxVisible - 1) * (EVENT_HEIGHT + EVENT_GAP)}px` }">
                             還有+{{ cell.overflowCount }}
                         </span>
                     </template>
@@ -40,7 +40,7 @@
                             @pointerenter="onPopoverEventPointerEnter(event.eventId)"
                             @pointerleave="onPopoverEventPointerLeave($event, event.eventId)"
                             @click.stop="editEvent(event)"
-                            :style="{ top: `${DAY_LABEL_HEIGHT + rowIndex * EVENT_HEIGHT}px` }" class="boxEvents" />
+                            :style="{ top: `${DAY_LABEL_HEIGHT + rowIndex * (EVENT_HEIGHT + EVENT_GAP)}px` }" class="boxEvents" />
                     </div>
 
                 </el-popover>
@@ -141,6 +141,7 @@ function weekMapping(weekNumber){
 
 const EVENT_HEIGHT = 22
 const DAY_LABEL_HEIGHT = 32
+const EVENT_GAP = 4
 
 function toLocalDate(date) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate())
@@ -195,7 +196,7 @@ const totalDays = computed(() => {
     return Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
 })
 
-const maxVisible = computed(() => Math.max(1, Math.floor((cellHeight.value - DAY_LABEL_HEIGHT) / EVENT_HEIGHT)))
+const maxVisible = computed(() => Math.max(1, Math.floor((cellHeight.value - DAY_LABEL_HEIGHT) / (EVENT_HEIGHT + EVENT_GAP))))
 
 const eventRowMap = computed(() => {
     const current = props.modelValue
@@ -402,7 +403,7 @@ function editEvent(event) {
 .calendar__cell {
     border-top: 1px solid rgba(60, 60, 60, 0.12);
     border-left: 1px solid rgba(60, 60, 60, 0.12);
-    overflow: hidden;
+    overflow: visible;
     color: var(--Black);
     position: relative;
 }
