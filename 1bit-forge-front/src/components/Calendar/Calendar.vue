@@ -15,15 +15,16 @@
                 <span class="calendar__day">{{ cell.day }}</span>
 
                 <!-- 事件列表 -->
-                <CalendarEvent v-for="{ event, continuesLeft, continuesRight, showTitle } in cell.events"
-                    :key="`${event.eventId}-${cell.date.getTime()}`" :event="event" :continues-left="continuesLeft"
-                    :continues-right="continuesRight" :show-title="showTitle"
+                <CalendarEvent v-for="{ event, continuesLeft, continuesRight, showTitle, rowIndex } in cell.events"
+                    :key="`${event.eventId}-${cell.date.getTime()}`" :event="event"
+                    :continues-left="continuesLeft" :continues-right="continuesRight" :show-title="showTitle"
                     :is-hovered="hoveredEventId === event.eventId" @pointerenter="onEventPointerEnter(event.eventId)"
                     @pointerleave="onEventPointerLeave($event, event.eventId)" @click.stop="editEvent(event)"
-                    class="boxEvents" />
+                    :style="{ top: `${DAY_LABEL_HEIGHT + rowIndex * (EVENT_HEIGHT + EVENT_GAP)}px` }" class="boxEvents" />
                 <el-popover placement="left" :width="200" trigger="hover" v-if="cell.hasOverflow">
                     <template #reference>
-                        <span class="calendar__cell-overflow">
+                        <span class="calendar__cell-overflow"
+                            :style="{ top: `${DAY_LABEL_HEIGHT + (maxVisible - 1) * (EVENT_HEIGHT + EVENT_GAP)}px` }">
                             還有+{{ cell.overflowCount }}
                         </span>
                     </template>
@@ -32,13 +33,14 @@
                             <p>週{{ weekMapping(cell.date.getDay()) }}</p>
                             <p>{{ cell.day }}</p>
                         </div>
-                        <CalendarEvent v-for="{ event, continuesLeft, continuesRight, showTitle } in cell.allEvents"
+                        <CalendarEvent v-for="{ event, continuesLeft, continuesRight, showTitle, rowIndex } in cell.allEvents"
                             :key="`${event.eventId}-${cell.date.getTime()}`" :event="event"
                             :continues-left="continuesLeft" :continues-right="continuesRight" :show-title="showTitle"
                             :is-hovered="popoverHoveredEventId === event.eventId"
                             @pointerenter="onPopoverEventPointerEnter(event.eventId)"
                             @pointerleave="onPopoverEventPointerLeave($event, event.eventId)"
-                            @click.stop="editEvent(event)" class="boxEvents" />
+                            @click.stop="editEvent(event)"
+                            :style="{ top: `${DAY_LABEL_HEIGHT + rowIndex * (EVENT_HEIGHT + EVENT_GAP)}px` }" class="boxEvents" />
                     </div>
 
                 </el-popover>
@@ -139,6 +141,7 @@ function weekMapping(weekNumber){
 
 const EVENT_HEIGHT = 22
 const DAY_LABEL_HEIGHT = 32
+const EVENT_GAP = 4
 
 function toLocalDate(date) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate())
@@ -193,6 +196,68 @@ const totalDays = computed(() => {
     return Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
 })
 
+const maxVisible = computed(() => Math.max(1, Math.floor((cellHeight.value - DAY_LABEL_HEIGHT) / (EVENT_HEIGHT + EVENT_GAP))))
+
+const eventRowMap = computed(() => {
+    const current = props.modelValue
+    const year = current.getFullYear()
+    const month = current.getMonth()
+    const startOffset = new Date(year, month, 1).getDay()
+    const startDate = new Date(year, month, 1 - startOffset)
+
+    const viewStart = new Date(startDate)
+    viewStart.setHours(0, 0, 0, 0)
+    const monthLastDate = new Date(year, month + 1, 0)
+    const viewEnd = new Date(year, month + 1, 0 + (6 - monthLastDate.getDay()))
+    viewEnd.setHours(0, 0, 0, 0)
+
+    const rowLastTime = []
+    const eventRows = new Map()
+
+    const totalSlots = totalDays.value
+
+    for (let index = 0; index < totalSlots; index++) {
+        const date = new Date(viewStart)
+        date.setDate(viewStart.getDate() + index)
+
+        const dayStartTime = date.getTime()
+
+        const dayEvents = props.eventList
+            .filter((event) => isDateInEventRange(date, event))
+            .slice()
+            .sort((a, b) => {
+                const aStart = new Date(a.startsAt).getTime()
+                const bStart = new Date(b.startsAt).getTime()
+                if (aStart !== bStart) return aStart - bStart
+                const aEnd = new Date(a.endsAt).getTime()
+                const bEnd = new Date(b.endsAt).getTime()
+                return (aEnd - aStart) - (bEnd - bStart)
+            })
+
+        for (const event of dayEvents) {
+            const id = event.eventId
+            if (!eventRows.has(id)) {
+                const freeRow = rowLastTime.findIndex((lastTime) => lastTime < dayStartTime)
+                const rowIndex = freeRow === -1 ? rowLastTime.length : freeRow
+                eventRows.set(id, rowIndex)
+                if (rowIndex >= rowLastTime.length) {
+                    rowLastTime.push(new Date(event.endsAt).getTime())
+                } else {
+                    rowLastTime[rowIndex] = new Date(event.endsAt).getTime()
+                }
+            } else {
+                const rowIndex = eventRows.get(id)
+                const eventEndTime = new Date(event.endsAt).getTime()
+                if (eventEndTime > rowLastTime[rowIndex]) {
+                    rowLastTime[rowIndex] = eventEndTime
+                }
+            }
+        }
+    }
+
+    return { eventRows, totalSlots, startDate }
+})
+
 const cells = computed(() => {
     const current = props.modelValue
     const year = current.getFullYear()
@@ -206,7 +271,7 @@ const cells = computed(() => {
     const todayMonth = today.getMonth()
     const todayDay = today.getDate()
 
-    const maxVisible = Math.max(1, Math.floor((cellHeight.value - DAY_LABEL_HEIGHT) / EVENT_HEIGHT))
+    const visibleLimit = maxVisible.value
 
     return Array.from({ length: totalDays.value }, (_, index) => {
         const date = new Date(startDate)
@@ -214,16 +279,23 @@ const cells = computed(() => {
 
         const allEvents = props.eventList
             .filter((event) => isDateInEventRange(date, event))
-            .map((event) => ({
-                event,
-                continuesLeft: continuesLeft(date, event),
-                continuesRight: continuesRight(date, event),
-                showTitle: !continuesLeft(date, event),
-            }))
+            .map((event) => {
+                const rowIndex = eventRowMap.value.eventRows.get(event.eventId) ?? 0
+                return {
+                    event,
+                    rowIndex,
+                    continuesLeft: continuesLeft(date, event),
+                    continuesRight: continuesRight(date, event),
+                    showTitle: !continuesLeft(date, event),
+                }
+            })
+            .sort((a, b) => a.rowIndex - b.rowIndex)
 
-        const hasOverflow = allEvents.length > maxVisible
-        const visibleCount = hasOverflow ? maxVisible - 1 : maxVisible
-        const overflowCount = allEvents.length - visibleCount
+        const overflowEvents = allEvents.filter((item) => item.rowIndex >= visibleLimit)
+        const hasOverflow = overflowEvents.length > 0
+        const visibleCount = hasOverflow ? visibleLimit - 1 : visibleLimit
+        const events = allEvents.slice(0, visibleCount)
+        const overflowCount = allEvents.length - events.length
 
         return {
             date,
@@ -233,7 +305,7 @@ const cells = computed(() => {
                 date.getFullYear() === todayYear &&
                 date.getMonth() === todayMonth &&
                 date.getDate() === todayDay,
-            events: allEvents.slice(0, visibleCount),
+            events,
             allEvents,
             hasOverflow,
             overflowCount,
@@ -333,6 +405,7 @@ function editEvent(event) {
     border-left: 1px solid rgba(60, 60, 60, 0.12);
     overflow: visible;
     color: var(--Black);
+    position: relative;
 }
 
 .calendar__cell.is-outside {
@@ -355,16 +428,21 @@ function editEvent(event) {
 }
 
 .boxEvents {
-    margin-bottom: 0.5vh;
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 22px;
 }
 
 .calendar__cell-overflow {
+    position: absolute;
+    left: 0;
+    right: 0;
     width: 95%;
     margin: 0 auto;
     display: block;
     font-size: 12px;
     color: rgba(60, 60, 60, 0.6);
-    margin-top: 2px;
 }
 
 .calendar__cell-overflow:hover {
