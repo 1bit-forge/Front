@@ -1,10 +1,15 @@
-import { getAccessToken, getRefreshToken, setAccessToken } from '@/utils/cookie'
+import {
+  getAccessToken,
+  getRefreshToken,
+  setAccessToken,
+  setRefreshToken,
+  removeToken,
+} from '@/utils/cookie'
 import { refreshToken } from '@/api/auth'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
-let isRefreshing = false
-let pendingRequests = []
+let refreshPromise = null
 
 function redirectToLogin() {
   window.location.href = '/login'
@@ -44,6 +49,37 @@ export async function request(method, path, body, auth = false) {
     throw new ApiError('連線失敗，請稍後再試', 0)
   }
 
+  if (res.status === 401 && auth) {
+    if (!getRefreshToken()) {
+      redirectToLogin()
+      throw new ApiError('請重新登入', 401)
+    }
+
+    if (refreshPromise) {
+      await refreshPromise
+      return request(method, path, body, auth)
+    }
+
+    refreshPromise = refreshToken({ refresh: getRefreshToken() })
+      .then(res => {
+        setAccessToken(res.data.access)
+        if (res.data.refresh) {
+          setRefreshToken(res.data.refresh)
+        }
+      })
+      .catch(() => {
+        removeToken()
+        redirectToLogin()
+        throw new ApiError('請重新登入', 401)
+      })
+      .finally(() => {
+        refreshPromise = null
+      })
+
+    await refreshPromise
+    return request(method, path, body, auth)
+  }
+
   let json
   try {
     json = await res.json()
@@ -53,40 +89,6 @@ export async function request(method, path, body, auth = false) {
 
   const code = json.code ?? res.status
   if (code < 200 || code >= 300) {
-    if (code === 401 && auth) {
-      if (!getRefreshToken()) {
-        redirectToLogin()
-        throw new ApiError('請重新登入', 401)
-      }
-
-      if (!isRefreshing) {
-        isRefreshing = true
-        try {
-          const refreshRes = await refreshToken({ refresh: getRefreshToken() })
-          setAccessToken(refreshRes.data.access)
-
-          pendingRequests.forEach(cb => cb())
-          pendingRequests = []
-        } catch {
-          redirectToLogin()
-          pendingRequests = []
-          throw new ApiError('請重新登入', 401)
-        } finally {
-          isRefreshing = false
-        }
-      }
-
-      return new Promise((resolve, reject) => {
-        pendingRequests.push(async () => {
-          try {
-            const retryResponse = await request(method, path, body, auth)
-            resolve(retryResponse)
-          } catch (err) {
-            reject(err)
-          }
-        })
-      })
-    }
     throw new ApiError(json.message || '操作失敗', code)
   }
 

@@ -1,11 +1,11 @@
 <template>
-  <button
-    :type="type"
-    class="btn"
-    :class="{ 'btn--fit-content': fitContent }"
-    :style="buttonStyle"
-    :disabled="disabled"
-  >
+    <button
+      :type="type"
+      class="btn"
+      :class="{ 'btn--fit-content': fitContent, ['btn--hover-' + hover]: true }"
+      :style="buttonStyle"
+      :disabled="disabled"
+    >
     <slot />
   </button>
 </template>
@@ -38,6 +38,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  hover: {
+    type: String,
+    default: "light"
+  }
 })
 
 const buttonStyle = computed(() => ({
@@ -72,5 +76,13 @@ const buttonStyle = computed(() => ({
 .btn:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+.btn--hover-light:hover {
+  filter: brightness(1.15);
+}
+
+.btn--hover-dark:hover {
+  filter: brightness(0.85);
 }
 </style>

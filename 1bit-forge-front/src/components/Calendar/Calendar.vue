@@ -11,7 +11,7 @@
             <div v-for="(cell, index) in cells" :key="index" class="calendar__cell" :class="{
                 'is-outside': !cell.isCurrentMonth,
                 'is-today': cell.isToday,
-            }" @click="createEvent()">
+            }" @click="createEvent(cell.date)">
                 <span class="calendar__day">{{ cell.day }}</span>
 
                 <!-- 事件列表 -->
@@ -47,7 +47,9 @@
         </div>
 
         <MyDrawer v-model:drawer="showDrawer" :title="drawerTitle">
-            <EventEdit :event-data="eventData" :mode="drawerMode" calendarType="MONTH"/>
+            <EventEdit :event-data="eventData" :mode="drawerMode" calendarType="MONTH"
+                @update:drawer="showDrawer = false"
+                @createEvent="emit('createEvent')"/>
         </MyDrawer>
     </div>
 </template>
@@ -119,7 +121,7 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'createEvent'])
 
 const weekdays = ['日', '一', '二', '三', '四', '五', '六']
 function weekMapping(weekNumber){
@@ -144,8 +146,8 @@ function toLocalDate(date) {
 
 function isDateInEventRange(date, event) {
     const cellDate = toLocalDate(date)
-    const startDate = toLocalDate(new Date(event.startTime))
-    const endDate = toLocalDate(new Date(event.endTime))
+    const startDate = toLocalDate(new Date(event.startsAt))
+    const endDate = toLocalDate(new Date(event.endsAt))
     return cellDate >= startDate && cellDate <= endDate
 }
 
@@ -160,11 +162,11 @@ function isSameDay(a, b) {
 }
 
 function isEventStartDay(date, event) {
-    return isSameDay(date, new Date(event.startTime))
+    return isSameDay(date, new Date(event.startsAt))
 }
 
 function isEventEndDay(date, event) {
-    return isSameDay(date, new Date(event.endTime))
+    return isSameDay(date, new Date(event.endsAt))
 }
 
 function continuesLeft(date, event) {
@@ -264,8 +266,16 @@ const drawerTitle = ref("")
 const eventData = ref(null)
 const drawerMode = ref("")
 
-function createEvent() {
-    eventData.value = null
+function createEvent(date) {
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const day = date.getDate()
+    const start = new Date(year, month, day, 8, 0, 0)
+    const end = new Date(year, month, day, 9, 0, 0)
+    eventData.value = {
+        startsAt: start.toISOString(),
+        endsAt: end.toISOString(),
+    }
     drawerTitle.value = "創建事件"
     drawerMode.value = "DETAIL"
     showDrawer.value = true

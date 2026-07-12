@@ -9,7 +9,7 @@
         }"
         
     >
-        <p v-if="showTitle">{{ event.eventName }}</p>
+        <p v-if="showTitle">{{ event.title }}</p>
         <span v-else class="event-container__spacer" aria-hidden="true"></span>
     </div>
 </template>
@@ -84,6 +84,14 @@ const props = defineProps({
 
 .is-continues-right {
     width: 95%;
+    margin-right: -1px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.is-continues-left.is-continues-right{
+    width: 101%;
+    margin-left: -1px;
     margin-right: -1px;
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;

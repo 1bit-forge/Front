@@ -17,8 +17,8 @@
                 v-for="layout in eventLayouts"
                 :key="layout.event.eventId"
                 :event="layout.event"
-                :top="getEventTop(layout.event.startTime)"
-                :height="getEventHeight(layout.event.startTime, layout.event.endTime)"
+                :top="getEventTop(layout.event.startsAt)"
+                :height="getEventHeight(layout.event.startsAt, layout.event.endsAt)"
                 :left="layout.left"
                 :width="layout.width"
                 @click.stop="editEvent(layout.event)"
@@ -26,7 +26,9 @@
         </div>
 
         <MyDrawer v-model:drawer="showDrawer" :title="drawerTitle">
-            <EventEdit :event-data="eventData" :mode="drawerMode" calendarType="DAY"/>
+            <EventEdit :event-data="eventData" :mode="drawerMode" calendarType="DAY"
+                @update:drawer="showDrawer = false"
+                @createEvent="emit('createEvent')"/>
         </MyDrawer>
     </div>
 </template>
@@ -43,6 +45,8 @@ const props = defineProps({
         default: () => [],
     },
 })
+
+const emit = defineEmits(['createEvent'])
 
 /**
  * 日曆時間軸高度常數：
@@ -75,8 +79,8 @@ function parseTimeToMinutes(timeStr) {
  * 事件區塊的 top 定位。
  * 直接以開始時間的總分鐘數 * 1px 作為距離頂部的偏移。
  */
-function getEventTop(startTime) {
-    return parseTimeToMinutes(startTime) * 1
+function getEventTop(startsAt) {
+    return parseTimeToMinutes(startsAt) * 1
 }
 
 /**
@@ -84,15 +88,15 @@ function getEventTop(startTime) {
  * 以結束時間的總分鐘數減去開始時間的總分鐘數，
  * 再乘上 1px / 分鐘的換算比例。
  */
-function getEventHeight(startTime, endTime) {
-    return (parseTimeToMinutes(endTime) - parseTimeToMinutes(startTime)) * 1
+function getEventHeight(startsAt, endsAt) {
+    return (parseTimeToMinutes(endsAt) - parseTimeToMinutes(startsAt)) * 1
 }
 
 /**
  * 計算重疊事件的分欄佈局。
  *
  * 規則：
- * 1. 依 startTime 排序。
+ * 1. 依 startsAt 排序。
  * 2. 逐事件放進第一個「不會與該欄最後一個事件重疊」的欄位。
  * 3. 若所有現有欄位都重疊，則開新欄。
  * 4. 每個事件最終會得到：
@@ -108,8 +112,8 @@ function computeEventLayout(eventList) {
 
     const events = eventList.map(event => ({
         ...event,
-        startMinutes: parseTimeToMinutes(event.startTime),
-        endMinutes: parseTimeToMinutes(event.endTime),
+        startMinutes: parseTimeToMinutes(event.startsAt),
+        endMinutes: parseTimeToMinutes(event.endsAt),
     }))
 
     // 依開始時間排序，同時段則以較長的優先處理，減少不必要的多欄
@@ -180,31 +184,31 @@ function computeEventLayout(eventList) {
 const eventList = ref([
     {
         "eventId": "a2b9e434b9e41276789aa321cc4545bc",
-        "eventName": "Lunch",
+        "title": "Lunch",
         "description": "lunch with family",
-        "startTime": "2026-06-26T12:30:00+08:00",
-        "endTime": "2026-06-26T13:30:00+08:00"
+        "startsAt": "2026-06-26T12:30:00+08:00",
+        "endsAt": "2026-06-26T13:30:00+08:00"
     },
     {
         "eventId": "9e434b9e4a321cc4545127a2b6789abc",
-        "eventName": "Lunch",
+        "title": "Lunch",
         "description": "lunch with family",
-        "startTime": "2026-06-26T12:30:00+08:00",
-        "endTime": "2026-06-26T13:30:00+08:00"
+        "startsAt": "2026-06-26T12:30:00+08:00",
+        "endsAt": "2026-06-26T13:30:00+08:00"
     },
     {
         "eventId": "a2b9e4389abc4b9e4a321cc454512767",
-        "eventName": "Lunch",
+        "title": "Lunch",
         "description": "lunch with family",
-        "startTime": "2026-06-26T12:30:00+08:00",
-        "endTime": "2026-06-26T13:30:00+08:00"
+        "startsAt": "2026-06-26T12:30:00+08:00",
+        "endsAt": "2026-06-26T13:30:00+08:00"
     },
     {
         "eventId": "a2b921cc454512e434b9e4a376789abc",
-        "eventName": "Lunch",
+        "title": "Lunch",
         "description": "lunch with family",
-        "startTime": "2026-06-26T10:30:00+08:00",
-        "endTime": "2026-06-26T11:30:00+08:00"
+        "startsAt": "2026-06-26T10:30:00+08:00",
+        "endsAt": "2026-06-26T11:30:00+08:00"
     },
 ])
 

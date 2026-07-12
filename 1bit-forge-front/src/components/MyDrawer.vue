@@ -1,12 +1,12 @@
 <template>
     <el-drawer v-model="visible" :title="title" direction="rtl" style="max-width: 600px; min-width: 500px">
         <slot></slot>
-        <template #footer>
+        <!-- <template #footer>
             <div style="flex: auto">
                 <el-button @click="cancelClick">cancel</el-button>
                 <el-button type="primary" @click="confirmClick">confirm</el-button>
             </div>
-        </template>
+        </template> -->
     </el-drawer>
 </template>
 
@@ -38,15 +38,6 @@ const visible = computed({
     get: () => props.drawer,
     set: (value) => emit('update:drawer', value),
 })
-
-function cancelClick() {
-  visible.value = false
-}
-
-function confirmClick() {
-  console.log("submit")
-  visible.value = false
-}
 
 
 </script>

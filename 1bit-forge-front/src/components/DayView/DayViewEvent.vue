@@ -4,7 +4,7 @@
         :data-event-id="event.eventId"
         :style="eventStyle"
     >
-        <p class="day-view-event__title">{{ event.eventName }}</p>
+        <p class="day-view-event__title">{{ event.title }}</p>
     </div>
 </template>
 
