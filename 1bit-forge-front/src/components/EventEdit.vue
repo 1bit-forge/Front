@@ -146,18 +146,25 @@ function deleteEvent() {
             zIndex: 3000,
         }
     )
-        .then(() => {
+        .then(async () => {
+            const params = {
+                eventId: form.eventId
+            }
+            const res = await eventApi.deleteEvent(params)
+            console.log(res)
+            emit('loadData')
+            emit('update:drawer', false)
             ElMessage({
                 type: 'warning',
-                message: 'Delete completed',
+                message: '成功刪除事件',
             })
         })
-        .catch(() => {
-            ElMessage({
-                type: 'info',
-                message: 'Delete canceled',
-            })
-        })
+    // .catch(() => {
+    //     ElMessage({
+    //         type: 'info',
+    //         message: 'Delete canceled',
+    //     })
+    // })
 }
 
 const emit = defineEmits(['update:drawer', 'loadData'])
@@ -169,8 +176,8 @@ function cancelClick() {
 async function confirmClick() {
     if (props.mode === 'CREATE') {
         await createEvent()
-    } else if (props.mode === 'EDIT'){
-        await editEvent()     
+    } else if (props.mode === 'EDIT') {
+        await editEvent()
     }
     emit('loadData')
     emit('update:drawer', false)
@@ -188,7 +195,12 @@ async function createEvent() {
         status: form.status
     }
     const res = await eventApi.createEvent(params)
-    console.log(res)
+    if (res.message == 'Success') {
+        ElMessage({
+            type: 'success',
+            message: '成功創建事件',
+        })
+    }
 }
 
 async function editEvent() {
@@ -204,7 +216,12 @@ async function editEvent() {
         status: form.status
     }
     const res = await eventApi.editEvent(params)
-    console.log(res)
+    if (res.message == 'Success') {
+        ElMessage({
+            type: 'success',
+            message: '成功更新事件',
+        })
+    }
 }
 </script>
 

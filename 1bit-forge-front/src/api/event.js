@@ -11,3 +11,7 @@ export function createEvent(params) {
 export function editEvent(params){
   return request('POST', '/api/calendar_core/events/edit/', params, true)
 }
+
+export function deleteEvent(params){
+  return request('POST', '/api/calendar_core/events/delete/', params, true)
+}

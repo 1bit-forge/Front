@@ -121,7 +121,7 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['update:modelValue', 'createEvent'])
+const emit = defineEmits(['update:modelValue', 'loadData'])
 
 const weekdays = ['日', '一', '二', '三', '四', '五', '六']
 function weekMapping(weekNumber){
