@@ -49,7 +49,7 @@
         <MyDrawer v-model:drawer="showDrawer" :title="drawerTitle">
             <EventEdit :event-data="eventData" :mode="drawerMode" calendarType="MONTH"
                 @update:drawer="showDrawer = false"
-                @createEvent="emit('createEvent')"/>
+                @loadData="emit('loadData')"/>
         </MyDrawer>
     </div>
 </template>
@@ -277,7 +277,7 @@ function createEvent(date) {
         endsAt: end.toISOString(),
     }
     drawerTitle.value = "創建事件"
-    drawerMode.value = "DETAIL"
+    drawerMode.value = "CREATE"
     showDrawer.value = true
 
 }

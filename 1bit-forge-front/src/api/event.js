@@ -7,3 +7,7 @@ export function getEventList(params) {
 export function createEvent(params) {
   return request('POST', '/api/calendar_core/events/create/', params, true)
 }
+
+export function editEvent(params){
+  return request('POST', '/api/calendar_core/events/edit/', params, true)
+}

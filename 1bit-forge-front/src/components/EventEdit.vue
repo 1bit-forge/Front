@@ -58,7 +58,7 @@ const props = defineProps({
     eventData: Object,
     mode: {
         type: String,
-        default: "DETAIL"
+        default: "CREATE"
     },
     calendarType: String
 })
@@ -160,15 +160,19 @@ function deleteEvent() {
         })
 }
 
-const emit = defineEmits(['update:drawer', 'createEvent'])
+const emit = defineEmits(['update:drawer', 'loadData'])
 
 function cancelClick() {
     emit('update:drawer', false)
 }
 
 async function confirmClick() {
-    await createEvent()
-    emit('createEvent')
+    if (props.mode === 'CREATE') {
+        await createEvent()
+    } else if (props.mode === 'EDIT'){
+        await editEvent()     
+    }
+    emit('loadData')
     emit('update:drawer', false)
 }
 
@@ -184,6 +188,22 @@ async function createEvent() {
         status: form.status
     }
     const res = await eventApi.createEvent(params)
+    console.log(res)
+}
+
+async function editEvent() {
+    const startsAt = form.timeRange[0]
+    const endsAt = form.timeRange[1]
+    const params = {
+        eventId: form.eventId,
+        title: form.title,
+        description: form.description,
+        startsAt: startsAt.toISOString(),
+        endsAt: endsAt.toISOString(),
+        priority: form.priority,
+        status: form.status
+    }
+    const res = await eventApi.editEvent(params)
     console.log(res)
 }
 </script>

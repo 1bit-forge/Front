@@ -24,7 +24,7 @@
                 </el-button-group>
             </div>
         </div>
-        <calendar v-if="calendarMode === 'month'" ref="calendarRef" v-model="value" :eventList="eventList" @createEvent="loadData" />
+        <calendar v-if="calendarMode === 'month'" ref="calendarRef" v-model="value" :eventList="eventList" @loadData="loadData" />
         <DayView v-else-if="calendarMode === 'day'" :eventList="dayViewMockData" @createEvent="loadData"/>
     </div>
 
