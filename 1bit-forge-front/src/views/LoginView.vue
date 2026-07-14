@@ -49,9 +49,7 @@ async function handleSubmit() {
   setRememberAccount(form.account, remember.value)
   const result = await login({ account: form.account, password: form.password })
   if (result.ok) {
-    const redirect =
-      typeof route.query.redirect === 'string' ? route.query.redirect : '/'
-    await router.push(redirect)
+    await router.push({ name: 'calendar' })
   }
 }
 

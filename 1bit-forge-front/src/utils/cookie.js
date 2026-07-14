@@ -22,7 +22,8 @@ export function setCookie(name, value, maxAgeDays = TOKEN_MAX_AGE_DAYS) {
 }
 
 export function removeCookie(name) {
-  document.cookie = `${encodeURIComponent(name)}=; Max-Age=0; Path=/; SameSite=Lax`
+  const secure = window.location.protocol === 'https:' ? '; Secure' : ''
+  document.cookie = `${encodeURIComponent(name)}=; Max-Age=0; Path=/; SameSite=Lax${secure}`
 }
 
 export function getAccessToken() {

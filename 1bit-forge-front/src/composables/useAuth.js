@@ -1,4 +1,5 @@
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import * as authApi from '@/api/auth'
 import { ApiError } from '@/api/client'
 import { getAccessToken, setAccessToken, removeToken, setRefreshToken, getRefreshToken } from '@/utils/cookie'
@@ -49,6 +50,7 @@ export function getUser() {
 export { getAccessToken }
 
 export function useAuth() {
+  const router = useRouter()
   const loading = ref(false)
   const error = ref('')
 
@@ -101,6 +103,7 @@ export function useAuth() {
   function logoutFromComposable() {
     logout()
     clearError()
+    router.replace('/login')
   }
 
   function setRememberAccount(account, remember) {
