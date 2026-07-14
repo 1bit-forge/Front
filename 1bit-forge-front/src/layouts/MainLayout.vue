@@ -1,7 +1,7 @@
 <template>
   <div class="common-layout">
     <el-container class="layout-container">
-      <el-aside width="240px" class="layout-aside">
+      <el-aside class="layout-aside">
         <div class="aside-inner">
           <nav class="aside-nav">
             <router-link
@@ -65,6 +65,7 @@ const footerNavItems = computed(() => navItems.filter((item) => item.footer))
 }
 
 .layout-aside {
+  width: 13vw;
   background: var(--background-color);
   padding: 16px 12px;
   border-right: 1px solid rgba(60, 60, 60, 0.12);
