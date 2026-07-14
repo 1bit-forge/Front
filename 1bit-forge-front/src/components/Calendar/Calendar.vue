@@ -16,11 +16,12 @@
 
                 <!-- 事件列表 -->
                 <CalendarEvent v-for="{ event, continuesLeft, continuesRight, showTitle, rowIndex } in cell.events"
-                    :key="`${event.eventId}-${cell.date.getTime()}`" :event="event"
-                    :continues-left="continuesLeft" :continues-right="continuesRight" :show-title="showTitle"
+                    :key="`${event.eventId}-${cell.date.getTime()}`" :event="event" :continues-left="continuesLeft"
+                    :continues-right="continuesRight" :show-title="showTitle"
                     :is-hovered="hoveredEventId === event.eventId" @pointerenter="onEventPointerEnter(event.eventId)"
                     @pointerleave="onEventPointerLeave($event, event.eventId)" @click.stop="editEvent(event)"
-                    :style="{ top: `${DAY_LABEL_HEIGHT + rowIndex * (EVENT_HEIGHT + EVENT_GAP)}px` }" class="boxEvents" />
+                    :style="{ top: `${DAY_LABEL_HEIGHT + rowIndex * (EVENT_HEIGHT + EVENT_GAP)}px` }"
+                    class="boxEvents" />
                 <el-popover placement="left" :width="200" trigger="hover" v-if="cell.hasOverflow">
                     <template #reference>
                         <span class="calendar__cell-overflow"
@@ -33,14 +34,17 @@
                             <p>週{{ weekMapping(cell.date.getDay()) }}</p>
                             <p>{{ cell.day }}</p>
                         </div>
-                        <CalendarEvent v-for="{ event, continuesLeft, continuesRight, showTitle, rowIndex } in cell.allEvents"
+                        <!-- <CalendarEvent v-for="{ event, continuesLeft, continuesRight, showTitle, rowIndex } in cell.allEvents"
                             :key="`${event.eventId}-${cell.date.getTime()}`" :event="event"
                             :continues-left="continuesLeft" :continues-right="continuesRight" :show-title="showTitle"
                             :is-hovered="popoverHoveredEventId === event.eventId"
                             @pointerenter="onPopoverEventPointerEnter(event.eventId)"
                             @pointerleave="onPopoverEventPointerLeave($event, event.eventId)"
                             @click.stop="editEvent(event)"
-                            :style="{ top: `${DAY_LABEL_HEIGHT + rowIndex * (EVENT_HEIGHT + EVENT_GAP)}px` }" class="boxEvents" />
+                            :style="{ top: `${DAY_LABEL_HEIGHT + rowIndex * (EVENT_HEIGHT + EVENT_GAP)}px` }" class="boxEvents" /> -->
+                        <div class="popEventArea">
+                            <PopEvent v-for="{ event } in cell.allEvents" @click="editEvent(event)">{{ event.title }}</PopEvent>
+                        </div>
                     </div>
 
                 </el-popover>
@@ -50,8 +54,7 @@
 
         <MyDrawer v-model:drawer="showDrawer" :title="drawerTitle">
             <EventEdit :event-data="eventData" :mode="drawerMode" calendarType="MONTH"
-                @update:drawer="showDrawer = false"
-                @loadData="emit('loadData')"/>
+                @update:drawer="showDrawer = false" @loadData="emit('loadData')" />
         </MyDrawer>
     </div>
 </template>
@@ -61,6 +64,7 @@ import { computed, reactive, ref, onMounted, nextTick } from 'vue'
 import CalendarEvent from './CalendarEvent.vue'
 import EventEdit from '../EventEdit.vue'
 import MyDrawer from '../MyDrawer.vue'
+import PopEvent from './PopEvent.vue'
 
 const hoveredEventId = ref(null)
 const popoverHoveredEventId = ref(null)
@@ -126,7 +130,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'loadData'])
 
 const weekdays = ['日', '一', '二', '三', '四', '五', '六']
-function weekMapping(weekNumber){
+function weekMapping(weekNumber) {
     const dayMap = {
         0: "日",
         1: "一",
@@ -443,6 +447,7 @@ function editEvent(event) {
     display: block;
     font-size: 12px;
     color: rgba(60, 60, 60, 0.6);
+    padding: 0.2vh 0.3vw;
 }
 
 .calendar__cell-overflow:hover {
@@ -453,11 +458,17 @@ function editEvent(event) {
     z-index: 2;
 }
 
-.popover-dayInfo{
+.popover-dayInfo {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: 1vh;
     cursor: default;
+}
+
+.popEventArea{
+    display: flex;
+    flex-direction: column;
+    gap: 0.5vh;
 }
 </style>
