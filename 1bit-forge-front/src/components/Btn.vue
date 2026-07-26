@@ -46,7 +46,8 @@ const props = defineProps({
 
 const buttonStyle = computed(() => ({
   backgroundColor: THEME_COLORS[props.color] ?? props.color,
-  color: props.color === 'neutral' ? 'var(--Secondary)' : '#fff',
+  color: ['neutral', 'white'].includes(props.color) ? 'var(--Secondary)' : '#fff',
+  border: ['neutral', 'white'].includes(props.color) ? '1px solid #dcdfe6' : 'none',
 }))
 </script>
 
@@ -58,7 +59,6 @@ const buttonStyle = computed(() => ({
   justify-content: center;
   gap: 8px;
   padding: 10px 16px;
-  border: none;
   border-radius: 6px;
   font-size: 14px;
   font-weight: 600;

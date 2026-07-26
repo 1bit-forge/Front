@@ -6,12 +6,12 @@
             <div>
                 <span class="calendar-header__label">{{ headerLabel }}</span>
             </div>
-            <div>
+            <div class="function-btn-group">
                 <el-select v-model="calendarMode" placeholder="Select" style="width: 100px; margin-right: 2vw;">
                     <el-option v-for="item in calendarModeOption" :key="item.value" :label="item.label"
                         :value="item.value" />
                 </el-select>
-                <el-button-group>
+                <el-button-group style="margin-right: 2vw;">
                     <el-button @click="selectDate('prev-month')">
                         上個月
                     </el-button>
@@ -22,10 +22,23 @@
                         下個月
                     </el-button>
                 </el-button-group>
+                <el-button @click="showUnScheduledList = !showUnScheduledList">待安排事件</el-button>
             </div>
         </div>
         <calendar v-if="calendarMode === 'month'" ref="calendarRef" v-model="value" :eventList="eventList" @loadData="loadData" />
         <DayView v-else-if="calendarMode === 'day'" :eventList="dayViewMockData" @createEvent="loadData"/>
+        <!-- <button
+            class="drawer-toggle"
+            :class="{ 'drawer-toggle--shifted': showUnScheduledList }"
+            @click="showUnScheduledList = !showUnScheduledList"
+            :aria-label="showUnScheduledList ? '關抽屜' : '開抽屜'"
+        >
+            <span v-if="!showUnScheduledList">◂</span>
+            <span v-else>▸</span>
+        </button> -->
+        <MyDrawer v-model:drawer="showUnScheduledList" title="待安排事件" :maxWidth="`400px`" :minWidth="`200px`">
+            <UnScheduledList :event-list="mockDataList" @loadData="loadUnScheduledData" />
+        </MyDrawer>
     </div>
 
 </template>
@@ -37,6 +50,9 @@ import DayView from '@/components/DayView/DayView.vue'
 import { computed, reactive, ref, watch } from 'vue'
 import * as eventApi from '@/api/event'
 import { ApiError } from '@/api/client'
+import MyDrawer from '@/components/MyDrawer.vue'
+import Btn from '@/components/Btn.vue'
+import UnScheduledList from '@/components/UnScheduledList/UnScheduledList.vue'
 
 
 const value = ref(new Date())
@@ -44,6 +60,7 @@ const viewMode = ref('month')
 const calendarRef = ref()
 const calendarMode = ref('month')
 const eventList = ref([])
+const showUnScheduledList = ref(false)
 
 const calendarModeOption = [
     {
@@ -147,6 +164,10 @@ async function loadData(){
     }
 }
 
+function loadUnScheduledData() {
+    mockDataList.splice(0, mockDataList.length, ...mockDataList.slice())
+}
+
 // 監聽 value 變化，重新載入資料
 watch(value, () => {
     loadData()
@@ -184,8 +205,40 @@ loadData()
     font-weight: 500;
 }
 
+.function-btn-group{
+    display: flex;
+    
+}
+
 .calendar-view :deep(.calendar) {
     flex: 1;
     min-height: 0;
+}
+
+.drawer-toggle {
+    position: fixed;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    z-index: 9999;
+    width: 28px;
+    height: 56px;
+    border: none;
+    border-radius: 6px 0 0 6px;
+    background: var(--White);
+    box-shadow: -2px 0 6px rgba(0, 0, 0, 0.12);
+    color: #333;
+    font-size: 16px;
+    line-height: 56px;
+    cursor: pointer;
+    transition: right 0.25s ease, background 0.15s ease;
+}
+
+.drawer-toggle:hover {
+    background: #f3f3f3;
+}
+
+.drawer-toggle--shifted {
+    right: 500px;
 }
 </style>

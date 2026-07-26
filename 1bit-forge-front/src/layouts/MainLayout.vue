@@ -65,7 +65,8 @@ const footerNavItems = computed(() => navItems.filter((item) => item.footer))
 }
 
 .layout-aside {
-  width: 13vw;
+  width: 10vw;
+  min-width: 150px;
   background: var(--background-color);
   padding: 16px 12px;
   border-right: 1px solid rgba(60, 60, 60, 0.12);

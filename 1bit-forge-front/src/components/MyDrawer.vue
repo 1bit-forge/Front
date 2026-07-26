@@ -1,5 +1,5 @@
 <template>
-    <el-drawer v-model="visible" :title="title" direction="rtl" style="max-width: 600px; min-width: 500px">
+    <el-drawer v-model="visible" :title="title" direction="rtl" :style="{'max-width': maxWidth, 'min-width': minWidth}">
         <slot></slot>
         <!-- <template #footer>
             <div style="flex: auto">
