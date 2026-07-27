@@ -220,9 +220,16 @@ const drawerMode = ref("")
 const eventData = ref(null)
 
 function createEvent(){
-    eventData.value = null
+    const start = new Date()
+    start.setMinutes(0, 0, 0)
+    const end = new Date(start)
+    end.setHours(start.getHours() + 1)
+    eventData.value = {
+        startsAt: start.toISOString(),
+        endsAt: end.toISOString(),
+    }
     drawerTitle.value  ="創建事件"
-    drawerMode.value = 'DETAIL'
+    drawerMode.value = 'CREATE'
     showDrawer.value = true
 }
 

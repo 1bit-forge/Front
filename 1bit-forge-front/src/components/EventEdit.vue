@@ -116,6 +116,24 @@ const statusOptions = [
 ]
 
 function syncFormFromEvent(data) {
+    if (!data) {
+        Object.assign(form, {
+            eventId: '',
+            title: '',
+            description: '',
+            timeRange: null,
+            loop: '不重複',
+            autoReschedule: true,
+            status: 'todo',
+            estimatedMinutes: 30,
+            earliestStart: '',
+            latestEnd: '',
+            priority: 3,
+            startsAt: '',
+            endsAt: '',
+        })
+        return
+    }
     form.eventId = data.eventId ?? ''
     form.title = data.title ?? ''
     form.description = data.description ?? ''
@@ -124,8 +142,8 @@ function syncFormFromEvent(data) {
     form.timeRange = data.startsAt && data.endsAt
         ? [new Date(data.startsAt), new Date(data.endsAt)]
         : null
-    form.startsAt = data.startsAt.slice(11, 16)
-    form.endsAt = data.endsAt.slice(11, 16)
+    form.startsAt = data.startsAt ? data.startsAt.slice(11, 16) : ''
+    form.endsAt = data.endsAt ? data.endsAt.slice(11, 16) : ''
     form.status = data.status ?? 'todo'
     form.estimatedMinutes = data.estimatedMinutes ?? 30
     form.earliestStart = data.earliestStart ?? ''
