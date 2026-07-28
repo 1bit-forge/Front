@@ -57,7 +57,6 @@ import UnScheduledList from '@/components/UnScheduledList/UnScheduledList.vue'
 
 
 const value = ref(new Date())
-const viewMode = ref('month')
 const calendarRef = ref()
 const calendarMode = ref('month')
 const eventList = ref([])
@@ -122,7 +121,7 @@ const mockDataList = reactive([
 const dayEventList = ref([])
 
 const headerLabel = computed(() => {
-    if (viewMode.value === 'day') {
+    if (calendarMode.value === 'day') {
         return value.value.toLocaleDateString('zh-TW', {
             year: 'numeric',
             month: 'long',
