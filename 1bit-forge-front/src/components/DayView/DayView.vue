@@ -44,6 +44,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    selectedDate: {
+        type: Date,
+        default: () => new Date(),
+    },
 })
 
 const emit = defineEmits(['createEvent'])
@@ -63,16 +67,16 @@ const hours = Array.from({ length: 24 }, (_, i) =>
 )
 
 /**
- * 將 HH:mm 字串解析為「距離 00:00 的總分鐘數」。
- * 例如：09:30 -> 570、12:00 -> 720
+ * 將事件時間字串解析為「距離 00:00 的總分鐘數」。
+ * 使用 `new Date()` 讓瀏覽器依本地時區換算，避免直接 slice ISO 字串而忽略時區偏移。
+ * 例如：'2026-06-26T12:30:00+08:00' 與 '2026-06-26T04:30:00Z' 在本地時區下皆會得到 12:30 -> 750。
  */
 function parseTimeToMinutes(timeStr) {
-    // 支援 ISO 8601 格式：先截取 HH:mm
-    if (timeStr.includes('T')) {
-        timeStr = timeStr.slice(11, 16)
+    const date = new Date(timeStr)
+    if (Number.isNaN(date.getTime())) {
+        return 0
     }
-    const [hour, minute] = timeStr.split(':').map(Number)
-    return hour * 60 + minute
+    return date.getHours() * 60 + date.getMinutes()
 }
 
 /**
@@ -177,42 +181,9 @@ function computeEventLayout(eventList) {
 }
 
 /**
- * Mock Data：
- * 用 HH:mm 格式的事件時間測試時間軸定位邏輯。
- * 這裡放一組會重疊的事件，方便確認分欄效果。
+ * 由父層傳入的真實事件列表，透過 computeEventLayout 計算版面配置。
  */
-const eventList = ref([
-    {
-        "eventId": "a2b9e434b9e41276789aa321cc4545bc",
-        "title": "Lunch",
-        "description": "lunch with family",
-        "startsAt": "2026-06-26T12:30:00+08:00",
-        "endsAt": "2026-06-26T13:30:00+08:00"
-    },
-    {
-        "eventId": "9e434b9e4a321cc4545127a2b6789abc",
-        "title": "Lunch",
-        "description": "lunch with family",
-        "startsAt": "2026-06-26T12:30:00+08:00",
-        "endsAt": "2026-06-26T13:30:00+08:00"
-    },
-    {
-        "eventId": "a2b9e4389abc4b9e4a321cc454512767",
-        "title": "Lunch",
-        "description": "lunch with family",
-        "startsAt": "2026-06-26T12:30:00+08:00",
-        "endsAt": "2026-06-26T13:30:00+08:00"
-    },
-    {
-        "eventId": "a2b921cc454512e434b9e4a376789abc",
-        "title": "Lunch",
-        "description": "lunch with family",
-        "startsAt": "2026-06-26T10:30:00+08:00",
-        "endsAt": "2026-06-26T11:30:00+08:00"
-    },
-])
-
-const eventLayouts = computed(() => computeEventLayout(eventList.value))
+const eventLayouts = computed(() => computeEventLayout(props.eventList))
 
 const showDrawer = ref(false)
 const drawerTitle = ref("")
@@ -220,8 +191,16 @@ const drawerMode = ref("")
 const eventData = ref(null)
 
 function createEvent(){
-    const start = new Date()
-    start.setMinutes(0, 0, 0)
+    const baseDate = props.selectedDate ?? new Date()
+    const start = new Date(
+        baseDate.getFullYear(),
+        baseDate.getMonth(),
+        baseDate.getDate(),
+        new Date().getHours(),
+        0,
+        0,
+        0,
+    )
     const end = new Date(start)
     end.setHours(start.getHours() + 1)
     eventData.value = {

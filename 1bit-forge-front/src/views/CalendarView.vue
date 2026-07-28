@@ -12,21 +12,22 @@
                         :value="item.value" />
                 </el-select>
                 <el-button-group style="margin-right: 2vw;">
-                    <el-button @click="selectDate('prev-month')">
-                        上個月
+                    <el-button @click="selectDate('prev')">
+                        {{ calendarMode === 'day' ? '昨天' : '上個月' }}
                     </el-button>
                     <el-button @click="selectDate('today')">
                         今天
                     </el-button>
-                    <el-button @click="selectDate('next-month')">
-                        下個月
+                    <el-button @click="selectDate('next')">
+                        {{ calendarMode === 'day' ? '明天' : '下個月' }}
                     </el-button>
                 </el-button-group>
                 <el-button @click="showUnScheduledList = !showUnScheduledList">待安排事件</el-button>
             </div>
         </div>
         <calendar v-if="calendarMode === 'month'" ref="calendarRef" v-model="value" :eventList="eventList" @loadData="loadData" />
-        <DayView v-else-if="calendarMode === 'day'" :eventList="dayViewMockData" @createEvent="loadData"/>
+        <DayView v-else-if="calendarMode === 'day'" :eventList="dayEventList" :selectedDate="value"
+            @createEvent="loadData" />
         <!-- <button
             class="drawer-toggle"
             :class="{ 'drawer-toggle--shifted': showUnScheduledList }"
@@ -118,7 +119,7 @@ const mockDataList = reactive([
     }
 ])
 
-const dayViewMockData = reactive([])
+const dayEventList = ref([])
 
 const headerLabel = computed(() => {
     if (viewMode.value === 'day') {
@@ -136,7 +137,20 @@ const headerLabel = computed(() => {
 })
 
 const selectDate = (type) => {
-    calendarRef.value?.selectDate(type)
+    if (calendarMode.value === 'day') {
+        const next = new Date(value.value)
+        if (type === 'prev') {
+            next.setDate(next.getDate() - 1)
+        } else if (type === 'next') {
+            next.setDate(next.getDate() + 1)
+        } else if (type === 'today') {
+            value.value = new Date()
+            return
+        }
+        value.value = next
+        return
+    }
+    calendarRef.value?.selectDate(`${type}-month`)
 }
 
 const startsAt = computed(() => {
@@ -149,15 +163,28 @@ const endsAt = computed(() => {
     return date.toISOString()
 })
 
+const dayStartsAt = computed(() => {
+    const date = new Date(value.value.getFullYear(), value.value.getMonth(), value.value.getDate(), 0, 0, 0, 0)
+    return date.toISOString()
+})
+
+const dayEndsAt = computed(() => {
+    const date = new Date(value.value.getFullYear(), value.value.getMonth(), value.value.getDate(), 23, 59, 59, 999)
+    return date.toISOString()
+})
+
 async function loadData(){
     try {
-        const params = {
-            startsAt: startsAt.value,
-            endsAt: endsAt.value,
-        }
+        const params = calendarMode.value === 'day'
+            ? { startsAt: dayStartsAt.value, endsAt: dayEndsAt.value }
+            : { startsAt: startsAt.value, endsAt: endsAt.value }
         const res = await eventApi.getEventList(params)
         console.log("load Event Data: ", res)
-        eventList.value = res.data
+        if (calendarMode.value === 'day') {
+            dayEventList.value = res.data
+        } else {
+            eventList.value = res.data
+        }
     } catch (err) {
         if (err instanceof ApiError && err.code === 401) return
         console.error('loadData failed:', err)
