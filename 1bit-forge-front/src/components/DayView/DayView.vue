@@ -12,13 +12,13 @@
             <!-- 24 條橫向背景格線，每條高度 60px -->
             <div v-for="hour in hours" :key="`grid-${hour}`" class="day-view__grid-line"></div>
 
-            <!-- 事件區塊：absolute 定位，top/height/left/width 依時間與分欄計算 -->
+            <!-- 事件區塊：absolute 定位，top/height 依當日裁切後的分鐘計算，left/width 依重疊分欄計算 -->
             <DayViewEvent
                 v-for="layout in eventLayouts"
                 :key="layout.event.eventId"
                 :event="layout.event"
-                :top="getEventTop(layout.event.startsAt)"
-                :height="getEventHeight(layout.event.startsAt, layout.event.endsAt)"
+                :top="layout.startMinutes"
+                :height="layout.endMinutes - layout.startMinutes"
                 :left="layout.left"
                 :width="layout.width"
                 @click.stop="editEvent(layout.event)"
@@ -67,94 +67,140 @@ const hours = Array.from({ length: 24 }, (_, i) =>
 )
 
 /**
- * 將事件時間字串解析為「距離 00:00 的總分鐘數」。
- * 使用 `new Date()` 讓瀏覽器依本地時區換算，避免直接 slice ISO 字串而忽略時區偏移。
- * 例如：'2026-06-26T12:30:00+08:00' 與 '2026-06-26T04:30:00Z' 在本地時區下皆會得到 12:30 -> 750。
+ * 將 ISO 時間字串解析為 Date；無效則回傳 null。
  */
-function parseTimeToMinutes(timeStr) {
+function parseEventDate(timeStr) {
     const date = new Date(timeStr)
-    if (Number.isNaN(date.getTime())) {
-        return 0
-    }
-    return date.getHours() * 60 + date.getMinutes()
+    return Number.isNaN(date.getTime()) ? null : date
 }
 
 /**
- * 事件區塊的 top 定位。
- * 直接以開始時間的總分鐘數 * 1px 作為距離頂部的偏移。
+ * 計算當日區間 [00:00, 次日 00:00) 的 Date。
+ * 使用 selectedDate 的本地年月日，避免 toISOString / UTC slice 造成的時區偏移。
  */
-function getEventTop(startsAt) {
-    return parseTimeToMinutes(startsAt) * 1
+function getDayBounds(selectedDate) {
+    const base = selectedDate ?? new Date()
+    const start = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 0, 0, 0, 0)
+    const end = new Date(base.getFullYear(), base.getMonth(), base.getDate() + 1, 0, 0, 0, 0)
+    return { start, end }
 }
 
 /**
- * 事件區塊的高度。
- * 以結束時間的總分鐘數減去開始時間的總分鐘數，
- * 再乘上 1px / 分鐘的換算比例。
- */
-function getEventHeight(startsAt, endsAt) {
-    return (parseTimeToMinutes(endsAt) - parseTimeToMinutes(startsAt)) * 1
-}
-
-/**
- * 計算重疊事件的分欄佈局。
+ * 計算事件與當日區間的交集，並轉成當日內的分鐘起訖 [0, 1440]。
  *
  * 規則：
- * 1. 依 startsAt 排序。
- * 2. 逐事件放進第一個「不會與該欄最後一個事件重疊」的欄位。
- * 3. 若所有現有欄位都重疊，則開新欄。
- * 4. 每個事件最終會得到：
+ * 1. 將事件時間轉成 Date 物件，若任一無效則略過。
+ * 2. 以半開區間 [eventStart, eventEnd) 與 [dayStart, dayEnd) 取交集。
+ * 3. 交集轉為距離當日 00:00 的分鐘數，供版面計算使用。
+ * 4. 若結束時間恰為當日 00:00，視為前一日的終點，本日不渲染（避免 0px 殘影）。
+ *
+ * 範例：2026-07-29 16:00 ~ 2026-07-31 10:00
+ *   - 7 月 29 日：960 ~ 1440（16:00 ~ 24:00）
+ *   - 7 月 30 日：0    ~ 1440（全天）
+ *   - 7 月 31 日：0    ~ 600 （00:00 ~ 10:00）
+ */
+function clipEventToDay(event, dayStart, dayEnd) {
+    const eventStart = parseEventDate(event.startsAt)
+    const eventEnd = parseEventDate(event.endsAt)
+    if (!eventStart || !eventEnd || eventEnd <= eventStart) {
+        return null
+    }
+
+    const clipStart = eventStart > dayStart ? eventStart : dayStart
+    const clipEnd = eventEnd < dayEnd ? eventEnd : dayEnd
+    if (clipEnd <= clipStart || clipEnd <= dayStart) {
+        return null
+    }
+
+    const startMinutes = (clipStart.getTime() - dayStart.getTime()) / 60000
+    const endMinutes = (clipEnd.getTime() - dayStart.getTime()) / 60000
+
+    return {
+        startMinutes,
+        endMinutes,
+    }
+}
+
+/**
+ * 事件區塊的 top 定位（以當日裁切後的分鐘數作為像素偏移）。
+ */
+function getEventTop(startMinutes) {
+    return startMinutes * 1
+}
+
+/**
+ * 事件區塊的高度（以當日裁切後的分鐘數差作為像素）。
+ */
+function getEventHeight(startMinutes, endMinutes) {
+    return (endMinutes - startMinutes) * 1
+}
+
+/**
+ * 計算重疊事件的分欄佈局（以當日裁切後的分鐘數判斷重疊）。
+ *
+ * 規則：
+ * 1. 對每筆事件以 clipEventToDay 取得當日區段；無交集則略過。
+ * 2. 依 startMinutes 排序；同時段則以較長的優先處理，減少不必要的多欄。
+ * 3. 逐事件放進第一個「不會與該欄最後一個事件重疊」的欄位。
+ * 4. 若所有現有欄位都重疊，則開新欄。
+ * 5. 每個事件最終會得到：
  *    - columnIndex：它在所屬群組中的第幾欄
  *    - totalColumns：與它同時段重疊的事件總共有幾欄
  *
- * 最後將 columnIndex / totalColumns 轉為 left / width 百分比傳給 DayViewEvent。
+ * 最後將 columnIndex / totalColumns 轉為 left / width 百分比傳給 DayViewEvent，
+ * 並回傳裁切後的 startMinutes / endMinutes 供 top / height 計算。
  */
-function computeEventLayout(eventList) {
+function computeEventLayout(eventList, dayBounds) {
     if (!eventList.length) {
         return []
     }
 
-    const events = eventList.map(event => ({
-        ...event,
-        startMinutes: parseTimeToMinutes(event.startsAt),
-        endMinutes: parseTimeToMinutes(event.endsAt),
-    }))
+    const { start: dayStart, end: dayEnd } = dayBounds
 
-    // 依開始時間排序，同時段則以較長的優先處理，減少不必要的多欄
-    events.sort((a, b) =>
+    const segments = []
+    for (const event of eventList) {
+        const clip = clipEventToDay(event, dayStart, dayEnd)
+        if (!clip) continue
+        segments.push({ event, ...clip })
+    }
+
+    if (!segments.length) {
+        return []
+    }
+
+    segments.sort((a, b) =>
         a.startMinutes - b.startMinutes ||
         (b.endMinutes - b.startMinutes) - (a.endMinutes - a.startMinutes),
     )
 
     const columns = []
-    const placements = events.map(event => {
+    const placements = segments.map(segment => {
         let columnIndex = columns.findIndex(
-            endMinutes => event.startMinutes >= endMinutes,
+            endMinutes => segment.startMinutes >= endMinutes,
         )
 
         if (columnIndex === -1) {
             columnIndex = columns.length
-            columns.push(event.endMinutes)
+            columns.push(segment.endMinutes)
         } else {
-            columns[columnIndex] = event.endMinutes
+            columns[columnIndex] = segment.endMinutes
         }
 
         return {
-            event,
+            segment,
             columnIndex,
         }
     })
 
-    // 計算每個事件實際應用的 totalColumns
     placements.forEach(placement => {
-        const { event, columnIndex } = placement
+        const { segment, columnIndex } = placement
         const overlappingColumns = new Set([columnIndex])
 
         placements.forEach(other => {
             if (other === placement) return
             const overlaps =
-                event.startMinutes < other.event.endMinutes &&
-                other.event.startMinutes < event.endMinutes
+                segment.startMinutes < other.segment.endMinutes &&
+                other.segment.startMinutes < segment.endMinutes
 
             if (overlaps) {
                 overlappingColumns.add(other.columnIndex)
@@ -167,13 +213,15 @@ function computeEventLayout(eventList) {
     const EVENT_GAP_RATIO = 0.008
 
     return placements.map(placement => {
-        const { event, columnIndex, totalColumns } = placement
+        const { segment, columnIndex, totalColumns } = placement
         const columnWidth = 1 / totalColumns
         const left = columnIndex * columnWidth + EVENT_GAP_RATIO / 2
         const width = columnWidth - EVENT_GAP_RATIO
 
         return {
-            event,
+            event: segment.event,
+            startMinutes: segment.startMinutes,
+            endMinutes: segment.endMinutes,
             left: `${left * 100}%`,
             width: `${width * 100}%`,
         }
@@ -182,8 +230,11 @@ function computeEventLayout(eventList) {
 
 /**
  * 由父層傳入的真實事件列表，透過 computeEventLayout 計算版面配置。
+ * 依目前 selectedDate 計算當日區間，並將跨日事件裁切到當日顯示。
  */
-const eventLayouts = computed(() => computeEventLayout(props.eventList))
+const eventLayouts = computed(() =>
+    computeEventLayout(props.eventList, getDayBounds(props.selectedDate)),
+)
 
 const showDrawer = ref(false)
 const drawerTitle = ref("")
