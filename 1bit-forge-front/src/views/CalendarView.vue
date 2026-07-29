@@ -3,9 +3,25 @@
     <div class="calendar-view">
 
         <div class="calendar-header">
-            <div>
-                <span class="calendar-header__label">{{ headerLabel }}</span>
-            </div>
+            <el-popover
+                ref="datePickerPopoverRef"
+                v-model:visible="datePickerVisible"
+                placement="bottom-start"
+                :width="calendarMode === 'month' ? 280 : 320"
+                trigger="click"
+            >
+                <template #reference>
+                    <span class="calendar-header__label" role="button" tabindex="0">
+                        {{ headerLabel }}
+                    </span>
+                </template>
+                <el-date-picker
+                    v-model="value"
+                    :type="calendarMode === 'month' ? 'month' : 'date'"
+                    :teleported="false"
+                    @change="onDatePicked"
+                />
+            </el-popover>
             <div class="function-btn-group">
                 <el-select v-model="calendarMode" placeholder="Select" style="width: 100px; margin-right: 2vw;">
                     <el-option v-for="item in calendarModeOption" :key="item.value" :label="item.label"
@@ -61,6 +77,8 @@ const calendarRef = ref()
 const calendarMode = ref('month')
 const eventList = ref([])
 const showUnScheduledList = ref(false)
+const datePickerVisible = ref(false)
+const datePickerPopoverRef = ref()
 
 const calendarModeOption = [
     {
@@ -194,6 +212,12 @@ function loadUnScheduledData() {
     mockDataList.splice(0, mockDataList.length, ...mockDataList.slice())
 }
 
+function onDatePicked() {
+    // el-date-picker 已於 change 時更新 value，
+    // 既有的 watch(value) 會自動觸發 loadData()。
+    datePickerVisible.value = false
+}
+
 // 監聽 value 變化，重新載入資料
 watch(value, () => {
     loadData()
@@ -229,6 +253,15 @@ loadData()
 .calendar-header__label {
     font-size: clamp(18px, 4vw, 28px);
     font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 4px;
+    padding: 2px 6px;
+    transition: background-color 0.15s ease;
+}
+
+.calendar-header__label:hover {
+    background-color: rgba(0, 0, 0, 0.04);
 }
 
 .function-btn-group{
