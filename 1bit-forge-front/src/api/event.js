@@ -15,3 +15,7 @@ export function editEvent(params){
 export function deleteEvent(params){
   return request('POST', '/api/calendar_core/events/delete/', params, true)
 }
+
+export function reschedule(params){
+  return request('POST', '/api/calendar_core/events/reschedule/', params, true)
+}

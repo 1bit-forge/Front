@@ -30,8 +30,8 @@
                     <el-option v-for="item in loopOptions" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
             </el-form-item>
-            <el-form-item label="啟用自動重排" v-show="form.status == 'todo'">
-                <el-checkbox v-model="form.autoReschedule" />
+            <el-form-item label="不參與自動重排" v-show="form.status == 'todo'">
+                <el-checkbox v-model="form.isFixed" />
             </el-form-item>
             <el-form-item label="事件持續時間" v-show="form.status == 'unscheduled'">
                 <el-input-number v-model="form.estimatedMinutes" :min="0" :step="30" />
@@ -69,7 +69,7 @@ const form = reactive({
     description: '',
     timeRange: null,
     loop: '',
-    autoReschedule: true,
+    isFixed: true,
     status: '',
     estimatedMinutes: 30,
     earliestStart: '',
@@ -123,7 +123,7 @@ function syncFormFromEvent(data) {
             description: '',
             timeRange: null,
             loop: '不重複',
-            autoReschedule: true,
+            isFixed: true,
             status: 'todo',
             estimatedMinutes: 30,
             earliestStart: '',
@@ -138,7 +138,7 @@ function syncFormFromEvent(data) {
     form.title = data.title ?? ''
     form.description = data.description ?? ''
     form.loop = data.loop ?? '不重複'
-    form.autoReschedule = data.autoReschedule ?? true
+    form.isFixed = data.isFixed ?? true
     form.timeRange = data.startsAt && data.endsAt
         ? [new Date(data.startsAt), new Date(data.endsAt)]
         : null
@@ -210,7 +210,8 @@ async function createEvent() {
         startsAt: startsAt.toISOString(),
         endsAt: endsAt.toISOString(),
         priority: form.priority,
-        status: form.status
+        status: form.status,
+        isFixed: form.isFixed
     }
     const res = await eventApi.createEvent(params)
     if (res.message == 'Success') {
@@ -231,7 +232,8 @@ async function editEvent() {
         startsAt: startsAt.toISOString(),
         endsAt: endsAt.toISOString(),
         priority: form.priority,
-        status: form.status
+        status: form.status,
+        isFixed: form.isFixed
     }
     const res = await eventApi.editEvent(params)
     if (res.message == 'Success') {

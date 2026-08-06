@@ -27,21 +27,23 @@
                     <el-option v-for="item in calendarModeOption" :key="item.value" :label="item.label"
                         :value="item.value" />
                 </el-select>
-                <el-button-group style="margin-right: 2vw;">
-                    <el-button @click="selectDate('prev')">
-                        {{ calendarMode === 'day' ? '昨天' : '上個月' }}
-                    </el-button>
-                    <el-button @click="selectDate('today')">
-                        今天
-                    </el-button>
-                    <el-button @click="selectDate('next')">
-                        {{ calendarMode === 'day' ? '明天' : '下個月' }}
-                    </el-button>
-                </el-button-group>
+        <el-button-group style="margin-right: 2vw;">
+            <el-button @click="selectDate('prev')">
+                {{ calendarMode === 'day' ? '昨天' : calendarMode === 'week' ? '上週' : '上個月' }}
+            </el-button>
+            <el-button @click="selectDate('today')">
+                今天
+            </el-button>
+            <el-button @click="selectDate('next')">
+                {{ calendarMode === 'day' ? '明天' : calendarMode === 'week' ? '下週' : '下個月' }}
+            </el-button>
+        </el-button-group>
                 <el-button @click="showUnScheduledList = !showUnScheduledList">待安排事件</el-button>
             </div>
         </div>
         <calendar v-if="calendarMode === 'month'" ref="calendarRef" v-model="value" :eventList="eventList" @loadData="loadData" />
+        <WeekView v-else-if="calendarMode === 'week'" :eventList="weekEventList" :selectedDate="value"
+            @createEvent="loadData" />
         <DayView v-else-if="calendarMode === 'day'" :eventList="dayEventList" :selectedDate="value"
             @createEvent="loadData" />
         <!-- <button
@@ -64,6 +66,7 @@
 
 import Calendar from '@/components/Calendar/Calendar.vue'
 import DayView from '@/components/DayView/DayView.vue'
+import WeekView from '@/components/WeekView/WeekView.vue'
 import { computed, reactive, ref, watch } from 'vue'
 import * as eventApi from '@/api/event'
 import { ApiError } from '@/api/client'
@@ -84,6 +87,10 @@ const calendarModeOption = [
     {
         value: 'month',
         label: '月',
+    },
+    {
+        value: 'week',
+        label: '週',
     },
     {
         value: 'day',
@@ -137,6 +144,30 @@ const mockDataList = reactive([
 ])
 
 const dayEventList = ref([])
+const weekEventList = ref([])
+
+/**
+ * 由任一日回溯到該週星期日 00:00（同本地時區），用於週範圍計算。
+ */
+function getWeekStart(date) {
+    const base = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0)
+    base.setDate(base.getDate() - base.getDay())
+    return base
+}
+
+/**
+ * 計算以週日為起點的第 N 週。
+ * 規則：週日為一週起點，跨年週歸週日所在年份；該年份中包含 1 月 1 日的週為第 1 週。
+ * 例如 2026/12/27（週日）～2027/01/02 屬於 2026 年第 53 週。
+ */
+function getWeekNumber(date) {
+    const weekStart = getWeekStart(date)
+    const yearStart = new Date(weekStart.getFullYear(), 0, 1, 0, 0, 0, 0)
+    const firstWeekStart = getWeekStart(yearStart)
+    const diffDays = Math.round((weekStart.getTime() - firstWeekStart.getTime()) / (1000 * 60 * 60 * 24))
+    const weekNumber = Math.floor(diffDays / 7) + 1
+    return { weekNumber, year: weekStart.getFullYear() }
+}
 
 const headerLabel = computed(() => {
     if (calendarMode.value === 'day') {
@@ -145,6 +176,11 @@ const headerLabel = computed(() => {
             month: 'long',
             day: 'numeric',
         })
+    }
+
+    if (calendarMode.value === 'week') {
+        const { year, weekNumber } = getWeekNumber(value.value)
+        return `${year} 年第 ${weekNumber} 週`
     }
 
     return value.value.toLocaleDateString('zh-TW', {
@@ -167,6 +203,21 @@ const selectDate = (type) => {
         value.value = next
         return
     }
+
+    if (calendarMode.value === 'week') {
+        const next = new Date(value.value)
+        if (type === 'prev') {
+            next.setDate(next.getDate() - 7)
+        } else if (type === 'next') {
+            next.setDate(next.getDate() + 7)
+        } else if (type === 'today') {
+            value.value = new Date()
+            return
+        }
+        value.value = next
+        return
+    }
+
     calendarRef.value?.selectDate(`${type}-month`)
 }
 
@@ -190,15 +241,34 @@ const dayEndsAt = computed(() => {
     return date.toISOString()
 })
 
+const weekStartsAt = computed(() => {
+    const start = getWeekStart(value.value)
+    return start.toISOString()
+})
+
+const weekEndsAt = computed(() => {
+    const start = getWeekStart(value.value)
+    const end = new Date(start)
+    end.setDate(start.getDate() + 7)
+    return end.toISOString()
+})
+
 async function loadData(){
     try {
-        const params = calendarMode.value === 'day'
-            ? { startsAt: dayStartsAt.value, endsAt: dayEndsAt.value }
-            : { startsAt: startsAt.value, endsAt: endsAt.value }
+        let params
+        if (calendarMode.value === 'day') {
+            params = { startsAt: dayStartsAt.value, endsAt: dayEndsAt.value }
+        } else if (calendarMode.value === 'week') {
+            params = { startsAt: weekStartsAt.value, endsAt: weekEndsAt.value }
+        } else {
+            params = { startsAt: startsAt.value, endsAt: endsAt.value }
+        }
         const res = await eventApi.getEventList(params)
         console.log("load Event Data: ", res)
         if (calendarMode.value === 'day') {
             dayEventList.value = res.data
+        } else if (calendarMode.value === 'week') {
+            weekEventList.value = res.data
         } else {
             eventList.value = res.data
         }
