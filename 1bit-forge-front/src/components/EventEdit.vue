@@ -153,6 +153,24 @@ function syncFormFromEvent(data) {
 
 watch(() => props.eventData, syncFormFromEvent, { immediate: true })
 
+async function triggerDayReschedule(startsAt) {
+    // 計算當地日期的 [00:00, 24:00) 作為重排範圍
+    const dayStart = new Date(startsAt)
+    dayStart.setHours(0, 0, 0, 0)
+    const dayEnd = new Date(dayStart)
+    dayEnd.setDate(dayEnd.getDate() + 1)
+    try {
+        await eventApi.reschedule({
+            startTime: dayStart.toISOString(),
+            endTime: dayEnd.toISOString(),
+            apply: true,
+        })
+    } catch (err) {
+        console.warn('當天重排失敗', err)
+        // 不拋錯，避免影響主流程的 ElMessage 與 UI 關閉
+    }
+}
+
 function deleteEvent() {
     ElMessageBox.confirm(
         '是否確認刪除此事件?',
@@ -169,13 +187,19 @@ function deleteEvent() {
                 eventId: form.eventId
             }
             const res = await eventApi.deleteEvent(params)
-            console.log(res)
+            if (res.message == 'Success') {
+                ElMessage({
+                    type: 'warning',
+                    message: '成功刪除事件',
+                })
+                // 使用原始事件的 startsAt 計算當天重排範圍
+                const origStart = props.eventData?.startsAt
+                if (origStart) {
+                    await triggerDayReschedule(new Date(origStart))
+                }
+            }
             emit('loadData')
             emit('update:drawer', false)
-            ElMessage({
-                type: 'warning',
-                message: '成功刪除事件',
-            })
         })
     // .catch(() => {
     //     ElMessage({
@@ -219,6 +243,9 @@ async function createEvent() {
             type: 'success',
             message: '成功創建事件',
         })
+        if (form.status === 'todo') {
+            await triggerDayReschedule(startsAt)
+        }
     }
 }
 
@@ -241,6 +268,9 @@ async function editEvent() {
             type: 'success',
             message: '成功更新事件',
         })
+        if (form.status === 'todo') {
+            await triggerDayReschedule(startsAt)
+        }
     }
 }
 </script>
