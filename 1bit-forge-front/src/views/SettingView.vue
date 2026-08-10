@@ -52,6 +52,14 @@ loadData()
 
 .setting-block{
     border: 1px solid lightgrey;
+    border-radius: 8px;
     padding: 0.8vw;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.setting-block:hover{
+    background-color: #f5f5f5;
+    border-color: #c0c4cc;
 }
 </style>
