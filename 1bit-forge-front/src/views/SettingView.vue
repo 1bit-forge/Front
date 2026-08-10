@@ -1,6 +1,6 @@
 <template>
     <div class="settting-container">
-        <el-form :model="form" label-width="auto" style="max-width: 600px;" label-position="left" size="large">
+        <el-form class="setting-form" :model="form" label-width="auto" label-position="left" size="large">
             <el-form-item label="Account">
                 <el-input v-model="form.account" disabled/>
             </el-form-item>
@@ -8,7 +8,10 @@
                 <el-input v-model="form.username" disabled/>
             </el-form-item>
         </el-form>
-        <Btn fit-content @click="logout">登出</Btn>
+        <div class="setting-block">
+            修改密碼
+        </div>
+        <Btn fit-content @click="logout" style="margin-top: 1vh;">登出</Btn>
     </div>
 </template>
 
@@ -39,5 +42,16 @@ loadData()
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+.setting-form,
+.setting-block{
+    width: 80%;
+    max-width: 600px;
+}
+
+.setting-block{
+    border: 1px solid lightgrey;
+    padding: 0.8vw;
 }
 </style>
