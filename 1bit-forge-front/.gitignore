@@ -38,4 +38,4 @@ __screenshots__/
 # Vite
 *.timestamp-*-*.mjs
 
-packge-lock.json
+package-lock.json
