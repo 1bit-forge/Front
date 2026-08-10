@@ -15,7 +15,20 @@
     </div>
 
     <MyDialog v-model:dialogVisible="showDialog" title="修改密碼">
-        <div>Change Password</div>
+        <el-form :model="changePasswordForm" label-width="auto" label-position="left" size="large">
+            <PasswordField
+                v-model="changePasswordForm.newPassword"
+                input-id="setting-new-password"
+                label="新密碼"
+                hint="至少 8 個字元且須包含至少一個數字"
+            />
+
+            <PasswordField
+                v-model="changePasswordForm.confirmPassword"
+                input-id="setting-confirm-password"
+                label="確認密碼"
+            />
+        </el-form>
     </MyDialog>
 </template>
 
@@ -24,6 +37,7 @@ import { reactive, ref } from 'vue';
 import Btn from '@/components/Btn.vue';
 import { useAuth } from '@/composables/useAuth';
 import MyDialog from '@/components/MyDialog.vue';
+import PasswordField from '@/components/auth/PasswordField.vue';
 
 const { logout } = useAuth();
 
@@ -32,6 +46,11 @@ const showDialog = ref(false)
 const form = reactive({
     account: '',
     username: ''
+})
+
+const changePasswordForm = reactive({
+    newPassword: '',
+    confirmPassword: ''
 })
 
 function loadData(){
