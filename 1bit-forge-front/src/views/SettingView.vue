@@ -8,20 +8,26 @@
                 <el-input v-model="form.username" disabled/>
             </el-form-item>
         </el-form>
-        <div class="setting-block">
+        <div class="setting-block" @click="showDialog = true">
             修改密碼
         </div>
         <Btn fit-content @click="logout" style="margin-top: 1vh;">登出</Btn>
     </div>
+
+    <MyDialog v-model:dialogVisible="showDialog" title="修改密碼">
+        <div>Change Password</div>
+    </MyDialog>
 </template>
 
 <script setup>
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import Btn from '@/components/Btn.vue';
 import { useAuth } from '@/composables/useAuth';
+import MyDialog from '@/components/MyDialog.vue';
 
 const { logout } = useAuth();
 
+const showDialog = ref(false)
 
 const form = reactive({
     account: '',

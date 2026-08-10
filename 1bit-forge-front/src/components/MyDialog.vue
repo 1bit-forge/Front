@@ -1,5 +1,5 @@
 <template>
-    <el-dialog v-model="dialogVisible" title="Tips" width="500" :before-close="handleClose">
+    <el-dialog v-model="dialogVisible" :title="title" width="500">
         <slot></slot>
         <template #footer>
             <div class="dialog-footer">
@@ -13,8 +13,12 @@
 </template>
 
 <script setup>
-const props = defineEmits({
-    
+const dialogVisible = defineModel('dialogVisible', {
+    type: Boolean,
+    default: false
+})
+defineProps({
+    title: String
 })
 </script>
 
