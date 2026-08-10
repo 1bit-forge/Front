@@ -1,7 +1,7 @@
 <template>
   <div class="common-layout">
     <el-container class="layout-container">
-      <el-aside class="layout-aside">
+      <el-aside class="layout-aside" :class="{ 'is-collapsed': collapsed }">
         <div class="aside-inner">
           <nav class="aside-nav">
             <router-link
@@ -18,16 +18,21 @@
           </nav>
           <div class="aside-footer">
             <div class="aside-divider" />
-            <router-link
-              v-for="item in footerNavItems"
-              :key="item.name"
-              :to="{ name: item.name }"
-              class="nav-item"
-              active-class="is-active"
-            >
-              <el-icon><component :is="item.icon" /></el-icon>
-              <span>{{ item.label }}</span>
-            </router-link>
+            <div class="aside-footer-row">
+              <router-link
+                v-for="item in footerNavItems"
+                :key="item.name"
+                :to="{ name: item.name }"
+                class="nav-item"
+                active-class="is-active"
+              >
+                <el-icon><component :is="item.icon" /></el-icon>
+                <span>{{ item.label }}</span>
+              </router-link>
+              <button type="button" class="collapse-toggle" @click="collapsed = !collapsed">
+                <el-icon><component :is="collapsed ? Expand : Fold" /></el-icon>
+              </button>
+            </div>
           </div>
         </div>
       </el-aside>
@@ -42,12 +47,13 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { Calendar, Setting } from '@element-plus/icons-vue'
+import { Calendar, Setting, Fold, Expand } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const showHeader = computed(() => route.meta.header !== false)
+const collapsed = ref(false)
 
 const navItems = [
   { name: 'calendar', label: 'Calendar', icon: Calendar, exact: true, footer: false },
@@ -70,6 +76,13 @@ const footerNavItems = computed(() => navItems.filter((item) => item.footer))
   background: var(--background-color);
   padding: 16px 12px;
   border-right: 1px solid rgba(60, 60, 60, 0.12);
+  transition: width 0.2s ease, min-width 0.2s ease;
+  overflow: hidden;
+}
+
+.layout-aside.is-collapsed {
+  width: 64px;
+  min-width: 64px;
 }
 
 .aside-inner {
@@ -98,6 +111,41 @@ const footerNavItems = computed(() => navItems.filter((item) => item.footer))
   height: 1px;
   background: rgba(60, 60, 60, 0.12);
   margin-bottom: 8px;
+}
+
+.aside-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.is-collapsed .aside-footer-row {
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.is-collapsed .nav-item span {
+  display: none;
+}
+
+.collapse-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--Black);
+  cursor: pointer;
+}
+
+.collapse-toggle:hover {
+  background: #f2ede4;
 }
 
 .layout-header {
