@@ -14,34 +14,45 @@
         <Btn fit-content @click="logout" style="margin-top: 1vh;">登出</Btn>
     </div>
 
-    <MyDialog v-model:dialogVisible="showDialog" title="修改密碼">
+    <MyDialog
+        v-model:dialogVisible="showDialog"
+        title="修改密碼"
+        :confirm-loading="changePasswordLoading"
+        @confirm="handleChangePassword"
+    >
         <el-form :model="changePasswordForm" label-width="auto" label-position="left" size="large">
+            <PasswordField
+                v-model="changePasswordForm.oldPassword"
+                input-id="setting-old-password"
+                label="舊密碼"
+                :error="changePasswordErrors.oldPassword"
+            />
+
             <PasswordField
                 v-model="changePasswordForm.newPassword"
                 input-id="setting-new-password"
                 label="新密碼"
                 hint="至少 8 個字元且須包含至少一個數字"
-            />
-
-            <PasswordField
-                v-model="changePasswordForm.confirmPassword"
-                input-id="setting-confirm-password"
-                label="確認密碼"
+                :error="changePasswordErrors.newPassword"
             />
         </el-form>
     </MyDialog>
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue';
+import { reactive, ref, watch } from 'vue';
+import { ElMessage } from 'element-plus';
 import Btn from '@/components/Btn.vue';
 import { useAuth } from '@/composables/useAuth';
 import MyDialog from '@/components/MyDialog.vue';
 import PasswordField from '@/components/auth/PasswordField.vue';
+import { changePassword } from '@/api/auth';
+import { ApiError } from '@/api/client';
 
 const { logout } = useAuth();
 
 const showDialog = ref(false)
+const changePasswordLoading = ref(false)
 
 const form = reactive({
     account: '',
@@ -49,9 +60,57 @@ const form = reactive({
 })
 
 const changePasswordForm = reactive({
-    newPassword: '',
-    confirmPassword: ''
+    oldPassword: '',
+    newPassword: ''
 })
+
+const changePasswordErrors = reactive({
+    oldPassword: '',
+    newPassword: ''
+})
+
+function resetChangePasswordDialog(){
+    changePasswordForm.oldPassword = ''
+    changePasswordForm.newPassword = ''
+    changePasswordErrors.oldPassword = ''
+    changePasswordErrors.newPassword = ''
+}
+
+watch(showDialog, (visible) => {
+    if (!visible) resetChangePasswordDialog()
+})
+
+function firstMessage(value){
+    return Array.isArray(value) ? value[0] : value
+}
+
+async function handleChangePassword(){
+    changePasswordErrors.oldPassword = ''
+    changePasswordErrors.newPassword = ''
+    changePasswordLoading.value = true
+    try {
+        await changePassword({
+            oldPassword: changePasswordForm.oldPassword,
+            newPassword: changePasswordForm.newPassword
+        })
+        ElMessage.success('密碼修改成功')
+        showDialog.value = false
+    } catch (err) {
+        if (err instanceof ApiError && err.code === 400 && err.data) {
+            changePasswordErrors.oldPassword = firstMessage(err.data.oldPassword) ?? ''
+            changePasswordErrors.newPassword = firstMessage(err.data.newPassword) ?? ''
+            if (!changePasswordErrors.oldPassword && !changePasswordErrors.newPassword) {
+                ElMessage.error(err.message)
+            }
+        } else if (err instanceof ApiError && err.code === 401) {
+            ElMessage.error('登入已過期，請重新登入')
+        } else {
+            ElMessage.error(err instanceof ApiError ? err.message : '連線失敗，請稍後再試')
+        }
+    } finally {
+        changePasswordLoading.value = false
+    }
+}
 
 function loadData(){
     const userInfo = JSON.parse(localStorage.getItem('lumina_auth_user'))

@@ -11,3 +11,7 @@ export function login(params) {
 export function refreshToken(params) {
   return request('POST', '/api/users/refresh/', params)
 }
+
+export function changePassword(params){
+  return request('POST', '/api/users/change-password/', params, true)
+}

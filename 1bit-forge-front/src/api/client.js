@@ -16,10 +16,11 @@ function redirectToLogin() {
 }
 
 export class ApiError extends Error {
-  constructor(message, code) {
+  constructor(message, code, data) {
     super(message)
     this.name = 'ApiError'
     this.code = code
+    this.data = data
   }
 }
 
@@ -89,7 +90,7 @@ export async function request(method, path, body, auth = false) {
 
   const code = json.code ?? res.status
   if (code < 200 || code >= 300) {
-    throw new ApiError(json.message || '操作失敗', code)
+    throw new ApiError(json.message || '操作失敗', code, json.data)
   }
 
   return json

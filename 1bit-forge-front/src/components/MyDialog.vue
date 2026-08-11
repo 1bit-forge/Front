@@ -4,7 +4,7 @@
         <template #footer>
             <div class="dialog-footer">
                 <el-button @click="dialogVisible = false">Cancel</el-button>
-                <el-button type="primary" @click="dialogVisible = false">
+                <el-button type="primary" :loading="confirmLoading" @click="$emit('confirm')">
                     Confirm
                 </el-button>
             </div>
@@ -18,8 +18,10 @@ const dialogVisible = defineModel('dialogVisible', {
     default: false
 })
 defineProps({
-    title: String
+    title: String,
+    confirmLoading: { type: Boolean, default: false }
 })
+defineEmits(['confirm'])
 </script>
 
 <style scoped></style>
