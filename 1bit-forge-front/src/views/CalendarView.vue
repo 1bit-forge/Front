@@ -38,7 +38,7 @@
                 {{ calendarMode === 'day' ? '明天' : calendarMode === 'week' ? '下週' : '下個月' }}
             </el-button>
         </el-button-group>
-                <el-button @click="showUnScheduledList = !showUnScheduledList">待安排事件</el-button>
+                <!-- <el-button @click="showUnScheduledList = !showUnScheduledList">待安排事件</el-button> -->
             </div>
         </div>
         <calendar v-if="calendarMode === 'month'" ref="calendarRef" v-model="value" :eventList="eventList" @loadData="loadData" />

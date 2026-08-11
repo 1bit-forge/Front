@@ -105,10 +105,10 @@ const statusOptions = [
         value: 'todo',
         label: '待完成',
     },
-    // {
-    //     value: 'unscheduled',
-    //     label: '待安排',
-    // },
+    {
+        value: 'scheduled',
+        label: '已安排',
+    },
     // {
     //     value: 'done',
     //     label: '已完成',

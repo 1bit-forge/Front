@@ -8,13 +8,17 @@
                 <el-input v-model="form.username" disabled/>
             </el-form-item>
         </el-form>
-        <div class="setting-block" @click="showDialog = true">
+        <div class="setting-block" @click="openDialog('changeSleepTime')">
+            修改睡眠時間
+        </div>
+        <div class="setting-block" @click="openDialog('changePassword')">
             修改密碼
         </div>
         <Btn fit-content @click="logout" style="margin-top: 1vh;">登出</Btn>
     </div>
 
     <MyDialog
+        v-if="dialogTarget === 'changePassword'"
         v-model:dialogVisible="showDialog"
         title="修改密碼"
         :confirm-loading="changePasswordLoading"
@@ -39,6 +43,14 @@
             />
         </el-form>
     </MyDialog>
+
+    <MyDialog
+        v-else-if="dialogTarget === 'changeSleepTime'"
+        v-model:dialogVisible="showDialog"
+        title="修改睡眠時間"
+    >
+        <p>功能開發中</p>   
+    </MyDialog>
 </template>
 
 <script setup>
@@ -55,6 +67,7 @@ const { logout } = useAuth();
 
 const showDialog = ref(false)
 const changePasswordLoading = ref(false)
+const dialogTarget = ref('')
 
 const form = reactive({
     account: '',
@@ -118,6 +131,11 @@ function loadData(){
     const userInfo = JSON.parse(localStorage.getItem('lumina_auth_user'))
     form.account = userInfo.account
     form.username = userInfo.username
+}
+
+function openDialog(target){
+    showDialog.value = true
+    dialogTarget.value = target
 }
 
 loadData()
