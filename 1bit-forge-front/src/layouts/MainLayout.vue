@@ -101,6 +101,7 @@ const footerNavItems = computed(() => navItems.filter((item) => item.footer))
   color: var(--Black);
   text-decoration: none;
   font-size: 15px;
+  width: 100%;
 }
 
 .nav-item.is-active {
