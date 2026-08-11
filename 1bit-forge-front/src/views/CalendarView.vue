@@ -39,9 +39,25 @@
             </el-button>
         </el-button-group>
                 <!-- <el-button @click="showUnScheduledList = !showUnScheduledList">待安排事件</el-button> -->
-                 <el-button @click="showUnScheduledList = !showUnScheduledList">重排</el-button>
+                 <el-button @click="openRescheduleDialog">重排</el-button>
             </div>
         </div>
+        <MyDialog
+            v-model:dialogVisible="showRescheduleDialog"
+            title="選擇重排日期範圍"
+            :confirm-loading="rescheduleLoading"
+            @confirm="confirmReschedule"
+        >
+            <el-date-picker
+                v-model="rescheduleDateRange"
+                type="daterange"
+                start-placeholder="開始日期"
+                end-placeholder="結束日期"
+                format="YYYY-MM-DD"
+                value-format="YYYY-MM-DD"
+                style="width: 100%;"
+            />
+        </MyDialog>
         <calendar v-if="calendarMode === 'month'" ref="calendarRef" v-model="value" :eventList="eventList" @loadData="loadData" />
         <WeekView v-else-if="calendarMode === 'week'" :eventList="weekEventList" :selectedDate="value"
             @createEvent="loadData" />
@@ -69,8 +85,10 @@ import Calendar from '@/components/Calendar/Calendar.vue'
 import DayView from '@/components/DayView/DayView.vue'
 import WeekView from '@/components/WeekView/WeekView.vue'
 import { computed, reactive, ref, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 import * as eventApi from '@/api/event'
 import { ApiError } from '@/api/client'
+import MyDialog from '@/components/MyDialog.vue'
 import MyDrawer from '@/components/MyDrawer.vue'
 import Btn from '@/components/Btn.vue'
 import UnScheduledList from '@/components/UnScheduledList/UnScheduledList.vue'
@@ -146,6 +164,10 @@ const mockDataList = reactive([
 
 const dayEventList = ref([])
 const weekEventList = ref([])
+
+const showRescheduleDialog = ref(false)
+const rescheduleLoading = ref(false)
+const rescheduleDateRange = ref(null)
 
 /**
  * 由任一日回溯到該週星期日 00:00（同本地時區），用於週範圍計算。
@@ -287,6 +309,53 @@ function onDatePicked() {
     // el-date-picker 已於 change 時更新 value，
     // 既有的 watch(value) 會自動觸發 loadData()。
     datePickerVisible.value = false
+}
+
+function openRescheduleDialog() {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    rescheduleDateRange.value = [today, today]
+    showRescheduleDialog.value = true
+}
+
+async function confirmReschedule() {
+    const range = rescheduleDateRange.value
+    if (!Array.isArray(range) || range.length !== 2) {
+        ElMessage.warning('請選擇完整的日期範圍')
+        return
+    }
+
+    const start = new Date(range[0])
+    const end = new Date(range[1])
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+        ElMessage.warning('日期格式不正確')
+        return
+    }
+    if (end < start) {
+        ElMessage.warning('結束日期不可早於開始日期')
+        return
+    }
+
+    start.setHours(0, 0, 0, 0)
+    end.setHours(0, 0, 0, 0)
+    end.setDate(end.getDate() + 1)
+
+    rescheduleLoading.value = true
+    try {
+        await eventApi.reschedule({
+            startTime: start.toISOString(),
+            endTime: end.toISOString(),
+            apply: true,
+        })
+        ElMessage.success('重排成功')
+        showRescheduleDialog.value = false
+        await loadData()
+    } catch (err) {
+        const message = err instanceof ApiError ? err.message : '重排失敗'
+        ElMessage.error(message)
+    } finally {
+        rescheduleLoading.value = false
+    }
 }
 
 // 監聽 value 變化，重新載入資料
