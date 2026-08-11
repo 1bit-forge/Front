@@ -43,6 +43,7 @@ const visible = ref(false)
         type="button"
         class="auth-field__toggle"
         :aria-label="visible ? '隱藏密碼' : '顯示密碼'"
+        tabindex="-1"
         @click="visible = !visible"
       >
         <el-icon :size="18">

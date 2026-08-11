@@ -26,6 +26,7 @@
                 input-id="setting-old-password"
                 label="舊密碼"
                 :error="changePasswordErrors.oldPassword"
+                @enter="handleChangePassword"
             />
 
             <PasswordField
@@ -34,6 +35,7 @@
                 label="新密碼"
                 hint="至少 8 個字元且須包含至少一個數字"
                 :error="changePasswordErrors.newPassword"
+                @enter="handleChangePassword"
             />
         </el-form>
     </MyDialog>
@@ -137,7 +139,7 @@ loadData()
 .setting-block{
     border: 1px solid lightgrey;
     border-radius: 8px;
-    padding: 0.8vw;
+    padding: 0.8vh 2vw;
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s;
 }
