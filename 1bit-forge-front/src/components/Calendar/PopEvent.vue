@@ -10,9 +10,11 @@
 
 <style scoped>
 .popEvent-container {
-    background-color: var(--Primary);
+    box-sizing: border-box;
+    background-color: var(--event-bg-color);
+    border: 1.5px solid var(--event-border-color);
     border-radius: 4px;
-    color: var(--White);
+    color: var(--event-text-color);
     font-size: 12px;
     padding: 0.3vw;
 }

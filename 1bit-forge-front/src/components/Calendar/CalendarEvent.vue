@@ -49,8 +49,10 @@ const props = defineProps({
 .event-container {
     width: 95%;
     margin: 0 auto;
-    background-color: var(--Primary);
-    color: var(--White);
+    box-sizing: border-box;
+    background-color: var(--event-bg-color);
+    color: var(--event-text-color);
+    border: 1.5px solid var(--event-border-color);
     border-radius: 4px;
     padding: 2px 6px;
     font-size: 12px;

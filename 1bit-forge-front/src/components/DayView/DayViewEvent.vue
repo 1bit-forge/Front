@@ -56,8 +56,9 @@ const eventStyle = computed(() => ({
 <style scoped>
 .day-view-event {
     position: absolute;
-    background-color: var(--Primary);
-    color: var(--White);
+    background-color: var(--event-bg-color);
+    color: var(--event-text-color);
+    border: 1.5px solid var(--event-border-color);
     border-radius: 6px;
     padding: 4px 8px;
     font-size: 12px;

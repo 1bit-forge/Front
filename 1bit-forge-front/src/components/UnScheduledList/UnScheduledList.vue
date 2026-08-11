@@ -50,8 +50,9 @@ function editEvent(event) {
     width: 95%;
     left: 4px;
     right: 4px;
-    background-color: var(--Primary);
-    color: var(--White);
+    background-color: var(--event-bg-color);
+    color: var(--event-text-color);
+    border: 1.5px solid var(--event-border-color);
     border-radius: 6px;
     padding: 8px 0;
     text-align: center;

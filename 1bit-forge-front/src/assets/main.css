@@ -1,3 +1,25 @@
 @import './base.css';
 
+/* Event 顏色系統：依色系分組，方便日後讓使用者選色 */
+:root {
+  --event-blue-border: #1E40AF;
+  --event-blue-bg: #DBEAFE;
+  --event-blue-text: var(--Black);
 
+  --event-red-border: #B91C1C;
+  --event-red-bg: #FEE2E2;
+  --event-red-text: var(--Black);
+
+  --event-yellow-border: #A16207;
+  --event-yellow-bg: #FEF9C3;
+  --event-yellow-text: var(--Black);
+
+  --event-green-border: #15803D;
+  --event-green-bg: #DCFCE7;
+  --event-green-text: var(--Black);
+
+  /* 目前預設色系（未來可依 event 分類切換成 red/yellow/green） */
+  --event-border-color: var(--event-blue-border);
+  --event-bg-color: var(--event-blue-bg);
+  --event-text-color: var(--event-blue-text);
+}
