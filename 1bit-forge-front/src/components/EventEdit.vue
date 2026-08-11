@@ -16,7 +16,7 @@
                         :value="item.value" />
                 </el-select>
             </el-form-item>
-            <el-form-item label="Time Range" v-show="form.status == 'todo'">
+            <el-form-item label="Time Range" >
                 <el-date-picker v-if="calendarType == 'MONTH'" v-model="form.timeRange" type="datetimerange"
                     start-placeholder="Start date" end-placeholder="End date" format="YYYY-MM-DD HH:mm"
                     date-format="YYYY/MM/DD ddd" time-format="A hh:mm" />
@@ -25,12 +25,12 @@
                         start-placeholder="Start time" end-placeholder="End time" />
                 </div>
             </el-form-item>
-            <el-form-item label="重複" v-show="form.status == 'todo'">
+            <el-form-item label="重複" >
                 <el-select v-model="form.loop" placeholder="please select your zone" style="max-width: 300px">
                     <el-option v-for="item in loopOptions" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
             </el-form-item>
-            <el-form-item label="不參與自動重排" v-show="form.status == 'todo'">
+            <el-form-item label="不參與自動重排">
                 <el-checkbox v-model="form.isFixed" />
             </el-form-item>
             <el-form-item label="事件持續時間" v-show="form.status == 'unscheduled'">
@@ -105,14 +105,14 @@ const statusOptions = [
         value: 'todo',
         label: '待完成',
     },
-    {
-        value: 'unscheduled',
-        label: '待安排',
-    },
-    {
-        value: 'done',
-        label: '已完成',
-    }
+    // {
+    //     value: 'unscheduled',
+    //     label: '待安排',
+    // },
+    // {
+    //     value: 'done',
+    //     label: '已完成',
+    // }
 ]
 
 function syncFormFromEvent(data) {
