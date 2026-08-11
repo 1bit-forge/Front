@@ -65,6 +65,9 @@ const props = defineProps({
 
 .event-container p {
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .event-container__spacer {
