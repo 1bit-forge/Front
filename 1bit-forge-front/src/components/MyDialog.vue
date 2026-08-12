@@ -1,5 +1,5 @@
 <template>
-    <el-dialog v-model="dialogVisible" :title="title" width="500" @keydown.enter="handleEnter">
+    <el-dialog v-model="dialogVisible" :title="title" style="width: 80vw; max-width: 500px" @keydown.enter="handleEnter">
         <slot></slot>
         <template #footer>
             <div class="dialog-footer">
