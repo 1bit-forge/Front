@@ -48,29 +48,25 @@
         v-else-if="dialogTarget === 'changeSleepTime'"
         v-model:dialogVisible="showDialog"
         title="修改排程喜好（系統會避開以下時段進行排程）"
+        :confirm-loading="scheduleSaving"
+        @confirm="handleSaveScheduleSettings"
     >
         <el-form label-width="120px" label-position="left" >
             <el-form-item label="睡眠時間">
-                <el-time-picker
-                    v-model="sleepTimeRange"
-                    is-range
-                    range-separator="至"
-                    start-placeholder="開始時間"
-                    end-placeholder="結束時間"
-                />
+                <div class="segment-row">
+                    <el-time-picker v-model="sleepTimeRange[0]" placeholder="開始時間" />
+                    <span class="segment-range-separator">至</span>
+                    <el-time-picker v-model="sleepTimeRange[1]" placeholder="結束時間" />
+                </div>
             </el-form-item>
             <el-form-item v-for="segment in customTimeSegments" :key="segment.id">
                 <template #label>
                     <el-input v-model="segment.label" placeholder="時段名稱" />
                 </template>
                 <div class="segment-row">
-                    <el-time-picker
-                        v-model="segment.range"
-                        is-range
-                        range-separator="至"
-                        start-placeholder="開始時間"
-                        end-placeholder="結束時間"
-                    />
+                    <el-time-picker v-model="segment.range[0]" placeholder="開始時間" />
+                    <span class="segment-range-separator">至</span>
+                    <el-time-picker v-model="segment.range[1]" placeholder="結束時間" />
                     <el-icon class="segment-remove" @click="removeTimeSegment(segment.id)"><Delete /></el-icon>
                 </div>
             </el-form-item>
@@ -91,22 +87,129 @@ import MyDialog from '@/components/MyDialog.vue';
 import PasswordField from '@/components/auth/PasswordField.vue';
 import { changePassword } from '@/api/auth';
 import { ApiError } from '@/api/client';
+import {
+    getBlackoutWindowList,
+    createBlackoutWindow,
+    editBlackoutWindow,
+    deleteBlackoutWindow,
+} from '@/api/blackoutWindow';
 
 const { logout } = useAuth();
+
+const SLEEP_BLACKOUT_NAME = '睡眠時間'
 
 const showDialog = ref(false)
 const changePasswordLoading = ref(false)
 const dialogTarget = ref('')
-const sleepTimeRange = ref([])
+const sleepTimeRange = ref([null, null])
+const sleepWindowId = ref(null)
 const customTimeSegments = ref([])
+const scheduleSaving = ref(false)
 let nextSegmentId = 1
 
-function addTimeSegment(){
-    customTimeSegments.value.push({ id: nextSegmentId++, label: '', range: [] })
+function timeStringToDate(timeStr){
+    if (!timeStr) return null
+    const [h, m, s] = timeStr.split(':').map(Number)
+    const d = new Date()
+    d.setHours(h, m, s || 0, 0)
+    return d
 }
 
-function removeTimeSegment(id){
+function dateToTimeString(date){
+    if (!date) return null
+    const pad = n => String(n).padStart(2, '0')
+    return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+}
+
+function addTimeSegment(){
+    customTimeSegments.value.push({ id: nextSegmentId++, remoteId: null, label: '', range: [null, null] })
+}
+
+async function removeTimeSegment(id){
+    const segment = customTimeSegments.value.find(s => s.id === id)
+    if (segment?.remoteId) {
+        try {
+            await deleteBlackoutWindow({ blackoutWindowId: segment.remoteId })
+        } catch (err) {
+            ElMessage.error(err instanceof ApiError ? err.message : '刪除失敗，請稍後再試')
+            return
+        }
+    }
     customTimeSegments.value = customTimeSegments.value.filter(segment => segment.id !== id)
+}
+
+async function loadScheduleSettings(){
+    try {
+        const res = await getBlackoutWindowList()
+        const windows = res.data ?? []
+
+        const sleepWindow = windows.find(w => w.blackoutName === SLEEP_BLACKOUT_NAME)
+        if (sleepWindow) {
+            sleepWindowId.value = sleepWindow.blackoutWindowId
+            sleepTimeRange.value = [
+                timeStringToDate(sleepWindow.startTime),
+                timeStringToDate(sleepWindow.endTime),
+            ]
+        } else {
+            sleepWindowId.value = null
+            sleepTimeRange.value = [null, null]
+        }
+
+        customTimeSegments.value = windows
+            .filter(w => w.blackoutName !== SLEEP_BLACKOUT_NAME)
+            .map(w => ({
+                id: nextSegmentId++,
+                remoteId: w.blackoutWindowId,
+                label: w.blackoutName,
+                range: [timeStringToDate(w.startTime), timeStringToDate(w.endTime)],
+            }))
+    } catch (err) {
+        ElMessage.error(err instanceof ApiError ? err.message : '讀取排程喜好失敗，請稍後再試')
+    }
+}
+
+async function saveWindow({ remoteId, label, range }){
+    if (!range?.[0] || !range?.[1]) return remoteId
+
+    const payload = {
+        blackoutName: label,
+        startTime: dateToTimeString(range[0]),
+        endTime: dateToTimeString(range[1]),
+    }
+
+    if (remoteId) {
+        await editBlackoutWindow({ blackoutWindowId: remoteId, ...payload })
+        return remoteId
+    }
+
+    const res = await createBlackoutWindow(payload)
+    return res.data.blackoutWindowId
+}
+
+async function handleSaveScheduleSettings(){
+    scheduleSaving.value = true
+    try {
+        sleepWindowId.value = await saveWindow({
+            remoteId: sleepWindowId.value,
+            label: SLEEP_BLACKOUT_NAME,
+            range: sleepTimeRange.value,
+        })
+
+        for (const segment of customTimeSegments.value) {
+            segment.remoteId = await saveWindow({
+                remoteId: segment.remoteId,
+                label: segment.label,
+                range: segment.range,
+            })
+        }
+
+        ElMessage.success('排程喜好已更新')
+        showDialog.value = false
+    } catch (err) {
+        ElMessage.error(err instanceof ApiError ? err.message : '儲存失敗，請稍後再試')
+    } finally {
+        scheduleSaving.value = false
+    }
 }
 
 const form = reactive({
@@ -134,7 +237,8 @@ function resetChangePasswordDialog(){
 watch(showDialog, (visible) => {
     if (!visible) {
         resetChangePasswordDialog()
-        sleepTimeRange.value = []
+        sleepTimeRange.value = [null, null]
+        sleepWindowId.value = null
         customTimeSegments.value = []
     }
 })
@@ -180,6 +284,9 @@ function loadData(){
 function openDialog(target){
     showDialog.value = true
     dialogTarget.value = target
+    if (target === 'changeSleepTime') {
+        loadScheduleSettings()
+    }
 }
 
 loadData()
@@ -215,6 +322,12 @@ loadData()
     display: flex;
     align-items: center;
     width: 100%;
+}
+
+.segment-range-separator{
+    margin: 0 0.5vw;
+    color: #909399;
+    flex-shrink: 0;
 }
 
 .segment-remove{
