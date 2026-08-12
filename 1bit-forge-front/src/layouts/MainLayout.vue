@@ -37,7 +37,9 @@
         </div>
       </el-aside>
       <el-container>
-        <el-header v-if="showHeader" class="layout-header" />
+        <el-header v-if="showHeader" class="layout-header">
+          <span class="layout-header__title">{{ route.meta.title }}</span>
+        </el-header>
         <el-main>
           <router-view />
         </el-main>
@@ -152,5 +154,13 @@ const footerNavItems = computed(() => navItems.filter((item) => item.footer))
 .layout-header {
   background: var(--White);
   height: 64px;
+  display: flex;
+  align-items: center;
+}
+
+.layout-header__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--Black);
 }
 </style>
