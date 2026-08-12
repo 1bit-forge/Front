@@ -9,7 +9,7 @@
             </el-form-item>
         </el-form>
         <div class="setting-block" @click="openDialog('changeSleepTime')">
-            修改睡眠時間
+            修改排程喜好
         </div>
         <div class="setting-block" @click="openDialog('changePassword')">
             修改密碼
@@ -47,7 +47,7 @@
     <MyDialog
         v-else-if="dialogTarget === 'changeSleepTime'"
         v-model:dialogVisible="showDialog"
-        title="修改睡眠時間"
+        title="修改排程喜好（系統會避開以下時段進行排程）"
     >
         <p>功能開發中</p>   
     </MyDialog>
