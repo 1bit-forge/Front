@@ -23,3 +23,28 @@
   --event-bg-color: var(--event-blue-bg);
   --event-text-color: var(--event-blue-text);
 }
+
+/* 依 eventId 雜湊隨機套用的四色主題 */
+.event-color-blue {
+  --event-border-color: var(--event-blue-border);
+  --event-bg-color: var(--event-blue-bg);
+  --event-text-color: var(--event-blue-text);
+}
+
+.event-color-red {
+  --event-border-color: var(--event-red-border);
+  --event-bg-color: var(--event-red-bg);
+  --event-text-color: var(--event-red-text);
+}
+
+.event-color-yellow {
+  --event-border-color: var(--event-yellow-border);
+  --event-bg-color: var(--event-yellow-bg);
+  --event-text-color: var(--event-yellow-text);
+}
+
+.event-color-green {
+  --event-border-color: var(--event-green-border);
+  --event-bg-color: var(--event-green-bg);
+  --event-text-color: var(--event-green-text);
+}

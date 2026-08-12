@@ -43,7 +43,7 @@
                             @click.stop="editEvent(event)"
                             :style="{ top: `${DAY_LABEL_HEIGHT + rowIndex * (EVENT_HEIGHT + EVENT_GAP)}px` }" class="boxEvents" /> -->
                         <div class="popEventArea">
-                            <PopEvent v-for="{ event } in cell.allEvents" @click="editEvent(event)">{{ event.title }}</PopEvent>
+                            <PopEvent v-for="{ event } in cell.allEvents" :key="event.eventId" :event="event" @click="editEvent(event)">{{ event.title }}</PopEvent>
                         </div>
                     </div>
 

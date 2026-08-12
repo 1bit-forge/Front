@@ -1,11 +1,21 @@
 <template>
-    <div class="popEvent-container">
+    <div class="popEvent-container" :class="colorClass">
         <slot></slot>
     </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { getEventColorClass } from '@/utils/eventColor'
 
+const props = defineProps({
+    event: {
+        type: Object,
+        required: true,
+    },
+})
+
+const colorClass = computed(() => getEventColorClass(props.event.eventId))
 </script>
 
 <style scoped>

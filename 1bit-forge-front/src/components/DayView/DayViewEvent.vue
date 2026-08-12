@@ -2,6 +2,7 @@
     <div
         class="day-view-event"
         :data-event-id="event.eventId"
+        :class="colorClass"
         :style="eventStyle"
     >
         <p class="day-view-event__title">{{ event.title }}</p>
@@ -10,6 +11,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { getEventColorClass } from '@/utils/eventColor'
 
 const props = defineProps({
     event: {
@@ -51,6 +53,8 @@ const eventStyle = computed(() => ({
     left: props.left,
     width: props.width,
 }))
+
+const colorClass = computed(() => getEventColorClass(props.event.eventId))
 </script>
 
 <style scoped>

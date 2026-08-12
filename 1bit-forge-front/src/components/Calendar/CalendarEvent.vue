@@ -2,12 +2,12 @@
     <div
         class="event-container"
         :data-event-id="event.eventId"
-        :class="{
+        :class="[colorClass, {
             'is-continues-left': continuesLeft,
             'is-continues-right': continuesRight,
             'is-hovered': isHovered,
-        }"
-        
+        }]"
+
     >
         <p v-if="showTitle">{{ event.title }}</p>
         <span v-else class="event-container__spacer" aria-hidden="true"></span>
@@ -15,6 +15,9 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { getEventColorClass } from '@/utils/eventColor'
+
 const props = defineProps({
     event: {
         type: Object,
@@ -37,6 +40,8 @@ const props = defineProps({
         default: false,
     },
 })
+
+const colorClass = computed(() => getEventColorClass(props.event.eventId))
 
 // const emit = defineEmits(['click'])
 
