@@ -8,11 +8,13 @@
                 <el-input v-model="form.username" disabled/>
             </el-form-item>
         </el-form>
-        <div class="setting-block" @click="openDialog('changeSleepTime')">
-            修改排程喜好
-        </div>
-        <div class="setting-block" @click="openDialog('changePassword')">
-            修改密碼
+        <div class="setting-group">
+            <div class="setting-block" @click="openDialog('changeSleepTime')">
+                修改排程喜好
+            </div>
+            <div class="setting-block" @click="openDialog('changePassword')">
+                修改密碼
+            </div>
         </div>
         <Btn fit-content @click="logout" style="margin-top: 1vh;">登出</Btn>
     </div>
@@ -169,7 +171,12 @@ async function loadScheduleSettings(){
 }
 
 async function saveWindow({ remoteId, label, range }){
-    if (!range?.[0] || !range?.[1]) return remoteId
+    if (!range?.[0] || !range?.[1]) {
+        if (remoteId) {
+            await deleteBlackoutWindow({ blackoutWindowId: remoteId })
+        }
+        return null
+    }
 
     const payload = {
         blackoutName: label,
@@ -300,17 +307,30 @@ loadData()
 }
 
 .setting-form,
-.setting-block{
+.setting-group{
     width: 80%;
     max-width: 600px;
 }
 
 .setting-block{
     border: 1px solid lightgrey;
-    border-radius: 8px;
     padding: 0.8vh 2vw;
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s;
+}
+
+.setting-block:not(:first-child){
+    border-top: none;
+}
+
+.setting-group .setting-block:first-child{
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.setting-group .setting-block:last-child{
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
 }
 
 .setting-block:hover{
