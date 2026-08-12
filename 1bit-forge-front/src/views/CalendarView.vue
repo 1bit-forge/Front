@@ -241,6 +241,11 @@ const selectDate = (type) => {
         return
     }
 
+    if (type === 'today') {
+        calendarRef.value?.selectDate('today')
+        return
+    }
+
     calendarRef.value?.selectDate(`${type}-month`)
 }
 

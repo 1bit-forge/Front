@@ -383,21 +383,11 @@ function editEvent(event) {
     display: flex;
     overflow-y: auto;
     overflow-x: hidden;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+    scrollbar-width: none;
 }
 
 .week-view__body::-webkit-scrollbar {
-    width: 6px;
-}
-
-.week-view__body::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.week-view__body::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.15);
-    border-radius: 3px;
+    display: none;
 }
 
 .week-view__time-axis {
