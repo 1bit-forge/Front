@@ -1,5 +1,5 @@
 <template>
-    <el-dialog v-model="dialogVisible" :title="title" width="500">
+    <el-dialog v-model="dialogVisible" :title="title" width="500" @keydown.enter="handleEnter">
         <slot></slot>
         <template #footer>
             <div class="dialog-footer">
@@ -17,11 +17,18 @@ const dialogVisible = defineModel('dialogVisible', {
     type: Boolean,
     default: false
 })
-defineProps({
+const props = defineProps({
     title: String,
     confirmLoading: { type: Boolean, default: false }
 })
-defineEmits(['confirm'])
+const emit = defineEmits(['confirm'])
+
+function handleEnter(event){
+    if (event.target.tagName === 'TEXTAREA') return
+    if (props.confirmLoading) return
+    event.preventDefault()
+    emit('confirm')
+}
 </script>
 
 <style scoped></style>

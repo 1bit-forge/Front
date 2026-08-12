@@ -15,3 +15,7 @@ export function refreshToken(params) {
 export function changePassword(params){
   return request('POST', '/api/users/change-password/', params, true)
 }
+
+export function updateProfile(params){
+  return request('PATCH', '/api/users/profile/', params, true)
+}

@@ -9,6 +9,7 @@ import { getAccessToken, setAccessToken, removeToken, setRefreshToken, getRefres
  * @property {string} id
  * @property {string} account
  * @property {string} username
+ * @property {string} email
  * @property {string|null} avatarUrl
  * @property {string} createdAt
  * @property {string} updatedAt
@@ -45,6 +46,14 @@ export function getUser() {
   } catch {
     return null
   }
+}
+
+/** 將更新後的使用者資料合併寫回 localStorage */
+export function updateStoredUser(partial) {
+  const current = getUser() ?? {}
+  const merged = { ...current, ...partial }
+  localStorage.setItem(STORAGE_USER, JSON.stringify(merged))
+  return merged
 }
 
 export { getAccessToken }

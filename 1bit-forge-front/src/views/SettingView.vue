@@ -7,8 +7,14 @@
             <el-form-item label="Username">
                 <el-input v-model="form.username" disabled/>
             </el-form-item>
+            <el-form-item label="Email">
+                <el-input v-model="form.email" disabled/>
+            </el-form-item>
         </el-form>
         <div class="setting-group">
+            <div class="setting-block" @click="openDialog('changeProfile')">
+                修改個人資料
+            </div>
             <div class="setting-block" @click="openDialog('changeSleepTime')">
                 修改排程喜好
             </div>
@@ -20,7 +26,24 @@
     </div>
 
     <MyDialog
-        v-if="dialogTarget === 'changePassword'"
+        v-if="dialogTarget === 'changeProfile'"
+        v-model:dialogVisible="showDialog"
+        title="修改個人資料"
+        :confirm-loading="profileLoading"
+        @confirm="handleUpdateProfile"
+    >
+        <el-form :model="profileForm" label-width="auto" label-position="left" size="large">
+            <el-form-item label="Username" :error="profileErrors.username">
+                <el-input v-model="profileForm.username" />
+            </el-form-item>
+            <el-form-item label="Email" :error="profileErrors.email">
+                <el-input v-model="profileForm.email" />
+            </el-form-item>
+        </el-form>
+    </MyDialog>
+
+    <MyDialog
+        v-else-if="dialogTarget === 'changePassword'"
         v-model:dialogVisible="showDialog"
         title="修改密碼"
         :confirm-loading="changePasswordLoading"
@@ -32,7 +55,6 @@
                 input-id="setting-old-password"
                 label="舊密碼"
                 :error="changePasswordErrors.oldPassword"
-                @enter="handleChangePassword"
             />
 
             <PasswordField
@@ -41,7 +63,6 @@
                 label="新密碼"
                 hint="至少 8 個字元且須包含至少一個數字"
                 :error="changePasswordErrors.newPassword"
-                @enter="handleChangePassword"
             />
         </el-form>
     </MyDialog>
@@ -84,10 +105,10 @@ import { reactive, ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import { Delete } from '@element-plus/icons-vue';
 import Btn from '@/components/Btn.vue';
-import { useAuth } from '@/composables/useAuth';
+import { useAuth, updateStoredUser } from '@/composables/useAuth';
 import MyDialog from '@/components/MyDialog.vue';
 import PasswordField from '@/components/auth/PasswordField.vue';
-import { changePassword } from '@/api/auth';
+import { changePassword, updateProfile } from '@/api/auth';
 import { ApiError } from '@/api/client';
 import {
     getBlackoutWindowList,
@@ -101,6 +122,7 @@ const { logout } = useAuth();
 const SLEEP_BLACKOUT_NAME = '睡眠時間'
 
 const showDialog = ref(false)
+const profileLoading = ref(false)
 const changePasswordLoading = ref(false)
 const dialogTarget = ref('')
 const sleepTimeRange = ref([null, null])
@@ -221,7 +243,18 @@ async function handleSaveScheduleSettings(){
 
 const form = reactive({
     account: '',
-    username: ''
+    username: '',
+    email: ''
+})
+
+const profileForm = reactive({
+    username: '',
+    email: ''
+})
+
+const profileErrors = reactive({
+    username: '',
+    email: ''
 })
 
 const changePasswordForm = reactive({
@@ -241,9 +274,15 @@ function resetChangePasswordDialog(){
     changePasswordErrors.newPassword = ''
 }
 
+function resetProfileDialogErrors(){
+    profileErrors.username = ''
+    profileErrors.email = ''
+}
+
 watch(showDialog, (visible) => {
     if (!visible) {
         resetChangePasswordDialog()
+        resetProfileDialogErrors()
         sleepTimeRange.value = [null, null]
         sleepWindowId.value = null
         customTimeSegments.value = []
@@ -282,10 +321,42 @@ async function handleChangePassword(){
     }
 }
 
+async function handleUpdateProfile(){
+    profileErrors.username = ''
+    profileErrors.email = ''
+    profileLoading.value = true
+    try {
+        const res = await updateProfile({
+            username: profileForm.username,
+            email: profileForm.email
+        })
+        form.username = res.data.username
+        form.email = res.data.email
+        updateStoredUser({ username: res.data.username, email: res.data.email })
+        ElMessage.success('個人資料已更新')
+        showDialog.value = false
+    } catch (err) {
+        if (err instanceof ApiError && err.code === 400 && err.data) {
+            profileErrors.username = firstMessage(err.data.username) ?? ''
+            profileErrors.email = firstMessage(err.data.email) ?? ''
+            if (!profileErrors.username && !profileErrors.email) {
+                ElMessage.error(err.message)
+            }
+        } else if (err instanceof ApiError && err.code === 401) {
+            ElMessage.error('登入已過期，請重新登入')
+        } else {
+            ElMessage.error(err instanceof ApiError ? err.message : '連線失敗，請稍後再試')
+        }
+    } finally {
+        profileLoading.value = false
+    }
+}
+
 function loadData(){
     const userInfo = JSON.parse(localStorage.getItem('lumina_auth_user'))
     form.account = userInfo.account
     form.username = userInfo.username
+    form.email = userInfo.email ?? ''
 }
 
 function openDialog(target){
@@ -293,6 +364,10 @@ function openDialog(target){
     dialogTarget.value = target
     if (target === 'changeSleepTime') {
         loadScheduleSettings()
+    }
+    if (target === 'changeProfile') {
+        profileForm.username = form.username
+        profileForm.email = form.email
     }
 }
 
