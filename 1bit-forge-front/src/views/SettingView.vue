@@ -49,7 +49,17 @@
         v-model:dialogVisible="showDialog"
         title="修改排程喜好（系統會避開以下時段進行排程）"
     >
-        <p>功能開發中</p>   
+        <el-form label-width="auto" label-position="left" >
+            <el-form-item label="睡眠時間">
+                <el-time-picker
+                    v-model="sleepTimeRange"
+                    is-range
+                    range-separator="至"
+                    start-placeholder="開始時間"
+                    end-placeholder="結束時間"
+                />
+            </el-form-item>
+        </el-form>
     </MyDialog>
 </template>
 
@@ -68,6 +78,7 @@ const { logout } = useAuth();
 const showDialog = ref(false)
 const changePasswordLoading = ref(false)
 const dialogTarget = ref('')
+const sleepTimeRange = ref([])
 
 const form = reactive({
     account: '',
