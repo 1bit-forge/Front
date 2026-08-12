@@ -3,6 +3,10 @@
     <el-container class="layout-container">
       <el-aside class="layout-aside" :class="{ 'is-collapsed': collapsed }">
         <div class="aside-inner">
+          <div class="aside-brand">
+            <span class="aside-brand__icon"><el-icon :size="16"><Sunny /></el-icon></span>
+            <span>{{ APP_NAME }}</span>
+          </div>
           <nav class="aside-nav">
             <router-link
               v-for="item in mainNavItems"
@@ -51,7 +55,8 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { Calendar, Setting, Fold, Expand } from '@element-plus/icons-vue'
+import { Calendar, Setting, Fold, Expand, Sunny } from '@element-plus/icons-vue'
+import { APP_NAME } from '@/constants/app.js'
 
 const route = useRoute()
 const showHeader = computed(() => route.meta.header !== false)
@@ -92,6 +97,27 @@ const footerNavItems = computed(() => navItems.filter((item) => item.footer))
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
+}
+
+.aside-brand {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  color: var(--Primary);
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.aside-brand__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--Primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
 }
 
 .nav-item {
@@ -162,5 +188,67 @@ const footerNavItems = computed(() => navItems.filter((item) => item.footer))
   font-size: 18px;
   font-weight: 600;
   color: var(--Black);
+}
+
+@media (max-width: 1024px) {
+  .layout-container {
+    flex-direction: column;
+  }
+
+  .layout-aside,
+  .layout-aside.is-collapsed {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid rgba(60, 60, 60, 0.12);
+    padding: 8px 16px;
+  }
+
+  .aside-inner {
+    flex-direction: row;
+    align-items: center;
+    height: auto;
+    gap: 16px;
+  }
+
+  .aside-brand {
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  .aside-nav {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+  }
+
+  .nav-item {
+    width: auto;
+  }
+
+  .is-collapsed .nav-item span {
+    display: inline;
+  }
+
+  .aside-footer {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .aside-divider {
+    display: none;
+  }
+
+  .collapse-toggle {
+    display: none;
+  }
+
+  @media (max-width: 600px) {
+    .nav-item span {
+      display: none;
+    }
+  }
 }
 </style>
