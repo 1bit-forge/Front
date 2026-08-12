@@ -296,7 +296,7 @@ function editEvent(event){
 }
 
 .day-view__time-axis {
-    width: 80px;
+    width: 10vw;
     flex-shrink: 0;
     border-right: 1px solid rgba(60, 60, 60, 0.12);
 }

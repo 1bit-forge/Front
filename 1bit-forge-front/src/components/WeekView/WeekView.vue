@@ -305,7 +305,7 @@ function editEvent(event) {
 <style scoped>
 .week-view {
     /* 為了讓頁首七欄與下方七欄左邊界精準對齊，讓頁首跟內欄共用同一個 80px 時間軸寬度（含 1px 右邊框）。 */
-    --week-view-time-axis-width: 80px;
+    --week-view-time-axis-width: 10vw;
     --week-view-time-axis-border: 1px;
     display: flex;
     flex-direction: column;
