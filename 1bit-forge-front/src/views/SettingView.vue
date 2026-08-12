@@ -49,7 +49,7 @@
         v-model:dialogVisible="showDialog"
         title="修改排程喜好（系統會避開以下時段進行排程）"
     >
-        <el-form label-width="auto" label-position="left" >
+        <el-form label-width="120px" label-position="left" >
             <el-form-item label="睡眠時間">
                 <el-time-picker
                     v-model="sleepTimeRange"
@@ -59,6 +59,24 @@
                     end-placeholder="結束時間"
                 />
             </el-form-item>
+            <el-form-item v-for="segment in customTimeSegments" :key="segment.id">
+                <template #label>
+                    <el-input v-model="segment.label" placeholder="時段名稱" />
+                </template>
+                <div class="segment-row">
+                    <el-time-picker
+                        v-model="segment.range"
+                        is-range
+                        range-separator="至"
+                        start-placeholder="開始時間"
+                        end-placeholder="結束時間"
+                    />
+                    <el-icon class="segment-remove" @click="removeTimeSegment(segment.id)"><Delete /></el-icon>
+                </div>
+            </el-form-item>
+            <div class="add-segment" @click="addTimeSegment">
+                + 添加時間段
+            </div>
         </el-form>
     </MyDialog>
 </template>
@@ -66,6 +84,7 @@
 <script setup>
 import { reactive, ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
+import { Delete } from '@element-plus/icons-vue';
 import Btn from '@/components/Btn.vue';
 import { useAuth } from '@/composables/useAuth';
 import MyDialog from '@/components/MyDialog.vue';
@@ -79,6 +98,16 @@ const showDialog = ref(false)
 const changePasswordLoading = ref(false)
 const dialogTarget = ref('')
 const sleepTimeRange = ref([])
+const customTimeSegments = ref([])
+let nextSegmentId = 1
+
+function addTimeSegment(){
+    customTimeSegments.value.push({ id: nextSegmentId++, label: '', range: [] })
+}
+
+function removeTimeSegment(id){
+    customTimeSegments.value = customTimeSegments.value.filter(segment => segment.id !== id)
+}
 
 const form = reactive({
     account: '',
@@ -103,7 +132,11 @@ function resetChangePasswordDialog(){
 }
 
 watch(showDialog, (visible) => {
-    if (!visible) resetChangePasswordDialog()
+    if (!visible) {
+        resetChangePasswordDialog()
+        sleepTimeRange.value = []
+        customTimeSegments.value = []
+    }
 })
 
 function firstMessage(value){
@@ -176,5 +209,28 @@ loadData()
 .setting-block:hover{
     background-color: #f5f5f5;
     border-color: #c0c4cc;
+}
+
+.segment-row{
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.segment-remove{
+    margin-left: 0.8vw;
+    cursor: pointer;
+    color: #f56c6c;
+    flex-shrink: 0;
+}
+
+/* .segment-remove:hover{
+    color: #f56c6c;
+} */
+
+.add-segment{
+    color: var(--el-color-primary);
+    cursor: pointer;
+    width: fit-content;
 }
 </style>
