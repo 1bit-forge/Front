@@ -135,14 +135,14 @@ function timeStringToDate(timeStr){
     if (!timeStr) return null
     const [h, m, s] = timeStr.split(':').map(Number)
     const d = new Date()
-    d.setHours(h, m, s || 0, 0)
+    d.setUTCHours(h, m, s || 0, 0)
     return d
 }
 
 function dateToTimeString(date){
     if (!date) return null
     const pad = n => String(n).padStart(2, '0')
-    return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+    return `${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`
 }
 
 function addTimeSegment(){
