@@ -19,10 +19,10 @@
             <el-form-item label="Time Range" >
                 <el-date-picker v-if="calendarType == 'MONTH'" v-model="form.timeRange" type="datetimerange"
                     start-placeholder="Start date" end-placeholder="End date" format="YYYY-MM-DD HH:mm"
-                    date-format="YYYY/MM/DD ddd" time-format="A hh:mm" />
+                    date-format="YYYY/MM/DD ddd" time-format="A hh:mm" popper-class="narrow-range-picker" />
                 <div v-if="calendarType == 'DAY'" class="demo-time-range">
                     <el-time-picker v-model="form.timeRange" is-range range-separator="To"
-                        start-placeholder="Start time" end-placeholder="End time" />
+                        start-placeholder="Start time" end-placeholder="End time" popper-class="narrow-range-picker" />
                 </div>
             </el-form-item>
             <el-form-item label="重複" >

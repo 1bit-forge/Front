@@ -56,6 +56,7 @@
                 format="YYYY-MM-DD"
                 value-format="YYYY-MM-DD"
                 style="width: 100%;"
+                popper-class="narrow-range-picker"
             />
         </MyDialog>
         <calendar v-if="calendarMode === 'month'" ref="calendarRef" v-model="value" :eventList="eventList" @loadData="loadData" />
