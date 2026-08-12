@@ -77,9 +77,9 @@
         <el-form label-width="120px" label-position="left" >
             <el-form-item label="睡眠時間">
                 <div class="segment-row">
-                    <el-time-picker v-model="sleepTimeRange[0]" placeholder="開始時間" />
+                    <el-time-picker v-model="sleepTimeRange[0]" placeholder="開始時間" format="HH:mm" />
                     <span class="segment-range-separator">至</span>
-                    <el-time-picker v-model="sleepTimeRange[1]" placeholder="結束時間" />
+                    <el-time-picker v-model="sleepTimeRange[1]" placeholder="結束時間" format="HH:mm" />
                 </div>
             </el-form-item>
             <el-form-item v-for="segment in customTimeSegments" :key="segment.id">
@@ -87,9 +87,9 @@
                     <el-input v-model="segment.label" placeholder="時段名稱" />
                 </template>
                 <div class="segment-row">
-                    <el-time-picker v-model="segment.range[0]" placeholder="開始時間" />
+                    <el-time-picker v-model="segment.range[0]" placeholder="開始時間" format="HH:mm" />
                     <span class="segment-range-separator">至</span>
-                    <el-time-picker v-model="segment.range[1]" placeholder="結束時間" />
+                    <el-time-picker v-model="segment.range[1]" placeholder="結束時間" format="HH:mm" />
                     <el-icon class="segment-remove" @click="removeTimeSegment(segment.id)"><Delete /></el-icon>
                 </div>
             </el-form-item>
