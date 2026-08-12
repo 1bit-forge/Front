@@ -23,23 +23,23 @@
                 />
             </el-popover>
             <div class="function-btn-group">
-                <el-select v-model="calendarMode" placeholder="Select" style="width: 100px; margin-right: 2vw;">
+                <el-select v-model="calendarMode" placeholder="Select" style="width: 100px;">
                     <el-option v-for="item in calendarModeOption" :key="item.value" :label="item.label"
                         :value="item.value" />
                 </el-select>
-        <el-button-group style="margin-right: 2vw;">
-            <el-button @click="selectDate('prev')">
-                {{ calendarMode === 'day' ? '昨天' : calendarMode === 'week' ? '上週' : '上個月' }}
-            </el-button>
-            <el-button @click="selectDate('today')">
-                今天
-            </el-button>
-            <el-button @click="selectDate('next')">
-                {{ calendarMode === 'day' ? '明天' : calendarMode === 'week' ? '下週' : '下個月' }}
-            </el-button>
-        </el-button-group>
+                <el-button-group>
+                    <el-button @click="selectDate('prev')">
+                        {{ calendarMode === 'day' ? '昨天' : calendarMode === 'week' ? '上週' : '上個月' }}
+                    </el-button>
+                    <el-button @click="selectDate('today')">
+                        今天
+                    </el-button>
+                    <el-button @click="selectDate('next')">
+                        {{ calendarMode === 'day' ? '明天' : calendarMode === 'week' ? '下週' : '下個月' }}
+                    </el-button>
+                </el-button-group>
                 <!-- <el-button @click="showUnScheduledList = !showUnScheduledList">待安排事件</el-button> -->
-                 <el-button @click="openRescheduleDialog">重排</el-button>
+                <el-button @click="openRescheduleDialog">重排</el-button>
             </div>
         </div>
         <MyDialog
@@ -390,8 +390,10 @@ loadData()
 
 .calendar-header {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
+    gap: 8px 2vw;
     padding: 1vh 0;
 }
 
@@ -409,9 +411,24 @@ loadData()
     background-color: rgba(0, 0, 0, 0.04);
 }
 
-.function-btn-group{
+.function-btn-group {
     display: flex;
-    
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px 2vw;
+    margin-left: auto;
+}
+
+@media (max-width: 600px) {
+    .calendar-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .function-btn-group {
+        justify-content: flex-end;
+    }
 }
 
 .calendar-view :deep(.calendar) {
