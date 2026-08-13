@@ -49,8 +49,9 @@
     </MyDialog>
 
     <MyDialog v-else-if="dialogTarget === 'changeSleepTime'" v-model:dialogVisible="showDialog"
-        title="修改排程喜好（系統會避開以下時段進行排程）" :confirm-loading="scheduleSaving" @confirm="handleSaveScheduleSettings">
+        title="修改排程喜好" :confirm-loading="scheduleSaving" @confirm="handleSaveScheduleSettings">
         <div class="schedule-form">
+            <p class="hints"><el-icon><InfoFilled /></el-icon>以下時段將自動避開，不會安排行程</p>
             <div class="schedule-row">
                 <div class="schedule-row__label">睡眠時間</div>
                 <div class="schedule-row__content">
@@ -100,7 +101,7 @@
 <script setup>
 import { reactive, ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
-import { Delete } from '@element-plus/icons-vue';
+import { Delete, InfoFilled } from '@element-plus/icons-vue';
 import Btn from '@/components/Btn.vue';
 import { useAuth, updateStoredUser } from '@/composables/useAuth';
 import { useIsMobile } from '@/composables/useIsMobile';
@@ -411,6 +412,16 @@ loadData()
 .setting-block:hover {
     background-color: #f5f5f5;
     border-color: #c0c4cc;
+}
+
+
+.hints {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #909399;
+    margin-bottom: 1.5vh;
 }
 
 .schedule-row {
