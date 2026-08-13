@@ -4,6 +4,7 @@
 
         <div class="calendar-header">
             <el-popover
+                v-if="!isMobile"
                 ref="datePickerPopoverRef"
                 v-model:visible="datePickerVisible"
                 placement="bottom-start"
@@ -22,6 +23,24 @@
                     @change="onDatePicked"
                 />
             </el-popover>
+            <span
+                v-else
+                class="calendar-header__label"
+                role="button"
+                tabindex="0"
+                @click="openMobileDatePicker"
+            >
+                {{ headerLabel }}
+            </span>
+            <van-popup v-model:show="mobileDatePickerVisible" position="bottom" round teleport="body" :z-index="3000">
+                <van-date-picker
+                    v-model="mobileHeaderDateValue"
+                    title="選擇日期"
+                    :columns-type="calendarMode === 'month' ? ['year', 'month'] : ['year', 'month', 'day']"
+                    @confirm="onMobileDatePicked"
+                    @cancel="mobileDatePickerVisible = false"
+                />
+            </van-popup>
             <div class="function-btn-group">
                 <el-select v-model="calendarMode" placeholder="Select" style="width: 100px;">
                     <el-option v-for="item in calendarModeOption" :key="item.value" :label="item.label"
@@ -49,6 +68,7 @@
             @confirm="confirmReschedule"
         >
             <el-date-picker
+                v-if="!isMobile"
                 v-model="rescheduleDateRange"
                 type="daterange"
                 start-placeholder="開始日期"
@@ -56,8 +76,20 @@
                 format="YYYY-MM-DD"
                 value-format="YYYY-MM-DD"
                 style="width: 100%;"
-                popper-class="narrow-range-picker"
             />
+            <div v-else class="mobile-time-range">
+                <MobileDatePickerField
+                    :model-value="rescheduleDateRange?.[0] ?? null"
+                    @update:model-value="val => setRescheduleRangePart(0, val)"
+                    placeholder="開始日期"
+                />
+                <span class="segment-range-separator">至</span>
+                <MobileDatePickerField
+                    :model-value="rescheduleDateRange?.[1] ?? null"
+                    @update:model-value="val => setRescheduleRangePart(1, val)"
+                    placeholder="結束日期"
+                />
+            </div>
         </MyDialog>
         <calendar v-if="calendarMode === 'month'" ref="calendarRef" v-model="value" :eventList="eventList" @loadData="loadData" />
         <WeekView v-else-if="calendarMode === 'week'" :eventList="weekEventList" :selectedDate="value"
@@ -93,8 +125,11 @@ import MyDialog from '@/components/MyDialog.vue'
 import MyDrawer from '@/components/MyDrawer.vue'
 import Btn from '@/components/Btn.vue'
 import UnScheduledList from '@/components/UnScheduledList/UnScheduledList.vue'
+import { useIsMobile } from '@/composables/useIsMobile'
+import MobileDatePickerField from '@/components/common/MobileDatePickerField.vue'
 
 
+const { isMobile } = useIsMobile()
 const value = ref(new Date())
 const calendarRef = ref()
 const calendarMode = ref('month')
@@ -102,6 +137,8 @@ const eventList = ref([])
 const showUnScheduledList = ref(false)
 const datePickerVisible = ref(false)
 const datePickerPopoverRef = ref()
+const mobileDatePickerVisible = ref(false)
+const mobileHeaderDateValue = ref(headerDateColumns(value.value))
 
 const calendarModeOption = [
     {
@@ -317,6 +354,30 @@ function onDatePicked() {
     datePickerVisible.value = false
 }
 
+function headerDateColumns(date) {
+    const pad = n => String(n).padStart(2, '0')
+    return calendarMode.value === 'month'
+        ? [String(date.getFullYear()), pad(date.getMonth() + 1)]
+        : [String(date.getFullYear()), pad(date.getMonth() + 1), pad(date.getDate())]
+}
+
+function openMobileDatePicker() {
+    mobileHeaderDateValue.value = headerDateColumns(value.value)
+    mobileDatePickerVisible.value = true
+}
+
+function onMobileDatePicked({ selectedValues }) {
+    const [year, month, day] = selectedValues
+    value.value = new Date(Number(year), Number(month) - 1, day ? Number(day) : 1)
+    mobileDatePickerVisible.value = false
+}
+
+function setRescheduleRangePart(index, val) {
+    const range = Array.isArray(rescheduleDateRange.value) ? [...rescheduleDateRange.value] : [null, null]
+    range[index] = val
+    rescheduleDateRange.value = range
+}
+
 function openRescheduleDialog() {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -410,6 +471,24 @@ loadData()
 
 .calendar-header__label:hover {
     background-color: rgba(0, 0, 0, 0.04);
+}
+
+.mobile-time-range {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 2vw;
+}
+
+.mobile-time-range :deep(.van-field) {
+    flex: 1;
+    min-width: 0;
+}
+
+.segment-range-separator {
+    margin: 0 0.5vw;
+    color: #909399;
+    flex-shrink: 0;
 }
 
 .function-btn-group {

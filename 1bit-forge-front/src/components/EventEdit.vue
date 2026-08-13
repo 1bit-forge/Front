@@ -17,13 +17,57 @@
                 </el-select>
             </el-form-item>
             <el-form-item label="Time Range" >
-                <el-date-picker v-if="calendarType == 'MONTH'" v-model="form.timeRange" type="datetimerange"
-                    start-placeholder="Start date" end-placeholder="End date" format="YYYY-MM-DD HH:mm"
-                    date-format="YYYY/MM/DD ddd" time-format="A hh:mm" popper-class="narrow-range-picker" />
-                <div v-if="calendarType == 'DAY'" class="demo-time-range">
-                    <el-time-picker v-model="form.timeRange" is-range range-separator="To"
-                        start-placeholder="Start time" end-placeholder="End time" popper-class="narrow-range-picker" />
-                </div>
+                <template v-if="!isMobile">
+                    <el-date-picker v-if="calendarType == 'MONTH'" v-model="form.timeRange" type="datetimerange"
+                        start-placeholder="Start date" end-placeholder="End date" format="YYYY-MM-DD HH:mm"
+                        date-format="YYYY/MM/DD ddd" time-format="A hh:mm" />
+                    <div v-if="calendarType == 'DAY'" class="demo-time-range">
+                        <el-time-picker v-model="form.timeRange" is-range range-separator="To"
+                            start-placeholder="Start time" end-placeholder="End time" />
+                    </div>
+                </template>
+                <template v-else>
+                    <div v-if="calendarType == 'MONTH'" class="mobile-datetime-range">
+                        <div class="mobile-time-range">
+                            <MobileDatePickerField
+                                :model-value="form.timeRange?.[0] ?? null"
+                                @update:model-value="val => setTimeRangePart(0, val)"
+                                placeholder="Start date"
+                            />
+                            <MobileTimePickerField
+                                :model-value="form.timeRange?.[0] ?? null"
+                                @update:model-value="val => setTimeRangePart(0, val)"
+                                placeholder="Start time"
+                            />
+                        </div>
+                        <span class="segment-range-separator">至</span>
+                        <div class="mobile-time-range">
+                            <MobileDatePickerField
+                                :model-value="form.timeRange?.[1] ?? null"
+                                @update:model-value="val => setTimeRangePart(1, val)"
+                                placeholder="End date"
+                            />
+                            <MobileTimePickerField
+                                :model-value="form.timeRange?.[1] ?? null"
+                                @update:model-value="val => setTimeRangePart(1, val)"
+                                placeholder="End time"
+                            />
+                        </div>
+                    </div>
+                    <div v-if="calendarType == 'DAY'" class="mobile-time-range">
+                        <MobileTimePickerField
+                            :model-value="form.timeRange?.[0] ?? null"
+                            @update:model-value="val => setTimeRangePart(0, val)"
+                            placeholder="Start time"
+                        />
+                        <span class="segment-range-separator">至</span>
+                        <MobileTimePickerField
+                            :model-value="form.timeRange?.[1] ?? null"
+                            @update:model-value="val => setTimeRangePart(1, val)"
+                            placeholder="End time"
+                        />
+                    </div>
+                </template>
             </el-form-item>
             <el-form-item label="重複" >
                 <el-select v-model="form.loop" placeholder="please select your zone" style="max-width: 300px">
@@ -53,6 +97,11 @@ import { reactive, watch } from 'vue';
 import Btn from './Btn.vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import * as eventApi from '@/api/event';
+import { useIsMobile } from '@/composables/useIsMobile';
+import MobileDatePickerField from '@/components/common/MobileDatePickerField.vue';
+import MobileTimePickerField from '@/components/common/MobileTimePickerField.vue';
+
+const { isMobile } = useIsMobile();
 
 const props = defineProps({
     eventData: Object,
@@ -114,6 +163,12 @@ const statusOptions = [
     //     label: '已完成',
     // }
 ]
+
+function setTimeRangePart(index, value) {
+    const range = Array.isArray(form.timeRange) ? [...form.timeRange] : [null, null]
+    range[index] = value
+    form.timeRange = range
+}
 
 function syncFormFromEvent(data) {
     if (!data) {
@@ -287,6 +342,25 @@ async function editEvent() {
     width: 100%;
     display: flex;
     justify-content: space-between !important;
+}
+
+.mobile-datetime-range {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5vh;
+}
+
+.mobile-time-range {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 2vw;
+}
+
+.mobile-time-range > :deep(.van-field) {
+    flex: 1;
+    min-width: 0;
 }
 
 .footer {

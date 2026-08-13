@@ -77,9 +77,16 @@
         <el-form label-width="120px" label-position="left" >
             <el-form-item label="睡眠時間">
                 <div class="segment-row">
-                    <el-time-picker v-model="sleepTimeRange[0]" placeholder="開始時間" format="HH:mm" />
-                    <span class="segment-range-separator">至</span>
-                    <el-time-picker v-model="sleepTimeRange[1]" placeholder="結束時間" format="HH:mm" />
+                    <template v-if="!isMobile">
+                        <el-time-picker v-model="sleepTimeRange[0]" placeholder="開始時間" format="HH:mm" />
+                        <span class="segment-range-separator">至</span>
+                        <el-time-picker v-model="sleepTimeRange[1]" placeholder="結束時間" format="HH:mm" />
+                    </template>
+                    <template v-else>
+                        <MobileTimePickerField v-model="sleepTimeRange[0]" placeholder="開始時間" use-utc />
+                        <span class="segment-range-separator">至</span>
+                        <MobileTimePickerField v-model="sleepTimeRange[1]" placeholder="結束時間" use-utc />
+                    </template>
                 </div>
             </el-form-item>
             <el-form-item v-for="segment in customTimeSegments" :key="segment.id">
@@ -87,9 +94,16 @@
                     <el-input v-model="segment.label" placeholder="時段名稱" />
                 </template>
                 <div class="segment-row">
-                    <el-time-picker v-model="segment.range[0]" placeholder="開始時間" format="HH:mm" />
-                    <span class="segment-range-separator">至</span>
-                    <el-time-picker v-model="segment.range[1]" placeholder="結束時間" format="HH:mm" />
+                    <template v-if="!isMobile">
+                        <el-time-picker v-model="segment.range[0]" placeholder="開始時間" format="HH:mm" />
+                        <span class="segment-range-separator">至</span>
+                        <el-time-picker v-model="segment.range[1]" placeholder="結束時間" format="HH:mm" />
+                    </template>
+                    <template v-else>
+                        <MobileTimePickerField v-model="segment.range[0]" placeholder="開始時間" use-utc />
+                        <span class="segment-range-separator">至</span>
+                        <MobileTimePickerField v-model="segment.range[1]" placeholder="結束時間" use-utc />
+                    </template>
                     <el-icon class="segment-remove" @click="removeTimeSegment(segment.id)"><Delete /></el-icon>
                 </div>
             </el-form-item>
@@ -106,7 +120,9 @@ import { ElMessage } from 'element-plus';
 import { Delete } from '@element-plus/icons-vue';
 import Btn from '@/components/Btn.vue';
 import { useAuth, updateStoredUser } from '@/composables/useAuth';
+import { useIsMobile } from '@/composables/useIsMobile';
 import MyDialog from '@/components/MyDialog.vue';
+import MobileTimePickerField from '@/components/common/MobileTimePickerField.vue';
 import PasswordField from '@/components/auth/PasswordField.vue';
 import { changePassword, updateProfile } from '@/api/auth';
 import { ApiError } from '@/api/client';
@@ -118,6 +134,7 @@ import {
 } from '@/api/blackoutWindow';
 
 const { logout } = useAuth();
+const { isMobile } = useIsMobile();
 
 const SLEEP_BLACKOUT_NAME = '睡眠時間'
 

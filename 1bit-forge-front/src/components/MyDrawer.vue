@@ -1,5 +1,6 @@
 <template>
-    <el-drawer v-model="visible" :title="title" direction="rtl" :style="{'max-width': maxWidth, 'min-width': minWidth}">
+    <el-drawer v-model="visible" :title="title" :direction="direction" :size="size"
+        :style="isMobile ? {} : { 'max-width': maxWidth, 'min-width': minWidth }">
         <slot></slot>
         <!-- <template #footer>
             <div style="flex: auto">
@@ -12,6 +13,9 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useIsMobile } from '@/composables/useIsMobile'
+
+const { isMobile } = useIsMobile()
 
 const props = defineProps({
     drawer: {
@@ -38,6 +42,9 @@ const visible = computed({
     get: () => props.drawer,
     set: (value) => emit('update:drawer', value),
 })
+
+const direction = computed(() => (isMobile.value ? 'btt' : 'rtl'))
+const size = computed(() => (isMobile.value ? '85%' : '30%'))
 
 
 </script>
