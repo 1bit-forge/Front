@@ -2,13 +2,13 @@
     <div class="settting-container">
         <el-form class="setting-form" :model="form" label-width="auto" label-position="left" size="large">
             <el-form-item label="Account">
-                <el-input v-model="form.account" disabled/>
+                <el-input v-model="form.account" disabled />
             </el-form-item>
             <el-form-item label="Username">
-                <el-input v-model="form.username" disabled/>
+                <el-input v-model="form.username" disabled />
             </el-form-item>
             <el-form-item label="Email">
-                <el-input v-model="form.email" disabled/>
+                <el-input v-model="form.email" disabled />
             </el-form-item>
         </el-form>
         <div class="setting-group">
@@ -25,13 +25,8 @@
         <Btn fit-content @click="logout" style="margin-top: 1vh;">登出</Btn>
     </div>
 
-    <MyDialog
-        v-if="dialogTarget === 'changeProfile'"
-        v-model:dialogVisible="showDialog"
-        title="修改個人資料"
-        :confirm-loading="profileLoading"
-        @confirm="handleUpdateProfile"
-    >
+    <MyDialog v-if="dialogTarget === 'changeProfile'" v-model:dialogVisible="showDialog" title="修改個人資料"
+        :confirm-loading="profileLoading" @confirm="handleUpdateProfile">
         <el-form :model="profileForm" label-width="auto" label-position="left" size="large">
             <el-form-item label="Username" :error="profileErrors.username">
                 <el-input v-model="profileForm.username" />
@@ -42,75 +37,63 @@
         </el-form>
     </MyDialog>
 
-    <MyDialog
-        v-else-if="dialogTarget === 'changePassword'"
-        v-model:dialogVisible="showDialog"
-        title="修改密碼"
-        :confirm-loading="changePasswordLoading"
-        @confirm="handleChangePassword"
-    >
+    <MyDialog v-else-if="dialogTarget === 'changePassword'" v-model:dialogVisible="showDialog" title="修改密碼"
+        :confirm-loading="changePasswordLoading" @confirm="handleChangePassword">
         <el-form :model="changePasswordForm" label-width="auto" label-position="left" size="large">
-            <PasswordField
-                v-model="changePasswordForm.oldPassword"
-                input-id="setting-old-password"
-                label="舊密碼"
-                :error="changePasswordErrors.oldPassword"
-            />
+            <PasswordField v-model="changePasswordForm.oldPassword" input-id="setting-old-password" label="舊密碼"
+                :error="changePasswordErrors.oldPassword" />
 
-            <PasswordField
-                v-model="changePasswordForm.newPassword"
-                input-id="setting-new-password"
-                label="新密碼"
-                hint="至少 8 個字元且須包含至少一個數字"
-                :error="changePasswordErrors.newPassword"
-            />
+            <PasswordField v-model="changePasswordForm.newPassword" input-id="setting-new-password" label="新密碼"
+                hint="至少 8 個字元且須包含至少一個數字" :error="changePasswordErrors.newPassword" />
         </el-form>
     </MyDialog>
 
-    <MyDialog
-        v-else-if="dialogTarget === 'changeSleepTime'"
-        v-model:dialogVisible="showDialog"
-        title="修改排程喜好（系統會避開以下時段進行排程）"
-        :confirm-loading="scheduleSaving"
-        @confirm="handleSaveScheduleSettings"
-    >
-        <el-form label-width="120px" label-position="left" >
-            <el-form-item label="睡眠時間">
-                <div class="segment-row">
-                    <template v-if="!isMobile">
-                        <el-time-picker v-model="sleepTimeRange[0]" placeholder="開始時間" format="HH:mm" />
-                        <span class="segment-range-separator">至</span>
-                        <el-time-picker v-model="sleepTimeRange[1]" placeholder="結束時間" format="HH:mm" />
-                    </template>
-                    <template v-else>
-                        <MobileTimePickerField v-model="sleepTimeRange[0]" placeholder="開始時間" use-utc />
-                        <span class="segment-range-separator">至</span>
-                        <MobileTimePickerField v-model="sleepTimeRange[1]" placeholder="結束時間" use-utc />
-                    </template>
+    <MyDialog v-else-if="dialogTarget === 'changeSleepTime'" v-model:dialogVisible="showDialog"
+        title="修改排程喜好（系統會避開以下時段進行排程）" :confirm-loading="scheduleSaving" @confirm="handleSaveScheduleSettings">
+        <div class="schedule-form">
+            <div class="schedule-row">
+                <div class="schedule-row__label">睡眠時間</div>
+                <div class="schedule-row__content">
+                    <div class="segment-row">
+                        <template v-if="!isMobile">
+                            <el-time-picker v-model="sleepTimeRange[0]" placeholder="開始時間" format="HH:mm" />
+                            <span class="segment-range-separator">至</span>
+                            <el-time-picker v-model="sleepTimeRange[1]" placeholder="結束時間" format="HH:mm" />
+                        </template>
+                        <template v-else>
+                            <MobileTimePickerField v-model="sleepTimeRange[0]" placeholder="開始時間" use-utc />
+                            <span class="segment-range-separator">至</span>
+                            <MobileTimePickerField v-model="sleepTimeRange[1]" placeholder="結束時間" use-utc />
+                        </template>
+                    </div>
                 </div>
-            </el-form-item>
-            <el-form-item v-for="segment in customTimeSegments" :key="segment.id">
-                <template #label>
+            </div>
+            <div class="schedule-row" v-for="segment in customTimeSegments" :key="segment.id">
+                <div class="schedule-row__label">
                     <el-input v-model="segment.label" placeholder="時段名稱" />
-                </template>
-                <div class="segment-row">
-                    <template v-if="!isMobile">
-                        <el-time-picker v-model="segment.range[0]" placeholder="開始時間" format="HH:mm" />
-                        <span class="segment-range-separator">至</span>
-                        <el-time-picker v-model="segment.range[1]" placeholder="結束時間" format="HH:mm" />
-                    </template>
-                    <template v-else>
-                        <MobileTimePickerField v-model="segment.range[0]" placeholder="開始時間" use-utc />
-                        <span class="segment-range-separator">至</span>
-                        <MobileTimePickerField v-model="segment.range[1]" placeholder="結束時間" use-utc />
-                    </template>
-                    <el-icon class="segment-remove" @click="removeTimeSegment(segment.id)"><Delete /></el-icon>
                 </div>
-            </el-form-item>
+                <div class="schedule-row__content">
+                    <div class="segment-row">
+                        <template v-if="!isMobile">
+                            <el-time-picker v-model="segment.range[0]" placeholder="開始時間" format="HH:mm" />
+                            <span class="segment-range-separator">至</span>
+                            <el-time-picker v-model="segment.range[1]" placeholder="結束時間" format="HH:mm" />
+                        </template>
+                        <template v-else>
+                            <MobileTimePickerField v-model="segment.range[0]" placeholder="開始時間" use-utc />
+                            <span class="segment-range-separator">至</span>
+                            <MobileTimePickerField v-model="segment.range[1]" placeholder="結束時間" use-utc />
+                        </template>
+                        <el-icon class="segment-remove" @click="removeTimeSegment(segment.id)">
+                            <Delete />
+                        </el-icon>
+                    </div>
+                </div>
+            </div>
             <div class="add-segment" @click="addTimeSegment">
                 + 添加時間段
             </div>
-        </el-form>
+        </div>
     </MyDialog>
 </template>
 
@@ -148,7 +131,7 @@ const customTimeSegments = ref([])
 const scheduleSaving = ref(false)
 let nextSegmentId = 1
 
-function timeStringToDate(timeStr){
+function timeStringToDate(timeStr) {
     if (!timeStr) return null
     const [h, m, s] = timeStr.split(':').map(Number)
     const d = new Date()
@@ -156,17 +139,17 @@ function timeStringToDate(timeStr){
     return d
 }
 
-function dateToTimeString(date){
+function dateToTimeString(date) {
     if (!date) return null
     const pad = n => String(n).padStart(2, '0')
     return `${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`
 }
 
-function addTimeSegment(){
+function addTimeSegment() {
     customTimeSegments.value.push({ id: nextSegmentId++, remoteId: null, label: '', range: [null, null] })
 }
 
-async function removeTimeSegment(id){
+async function removeTimeSegment(id) {
     const segment = customTimeSegments.value.find(s => s.id === id)
     if (segment?.remoteId) {
         try {
@@ -179,7 +162,7 @@ async function removeTimeSegment(id){
     customTimeSegments.value = customTimeSegments.value.filter(segment => segment.id !== id)
 }
 
-async function loadScheduleSettings(){
+async function loadScheduleSettings() {
     try {
         const res = await getBlackoutWindowList()
         const windows = res.data ?? []
@@ -209,7 +192,7 @@ async function loadScheduleSettings(){
     }
 }
 
-async function saveWindow({ remoteId, label, range }){
+async function saveWindow({ remoteId, label, range }) {
     if (!range?.[0] || !range?.[1]) {
         if (remoteId) {
             await deleteBlackoutWindow({ blackoutWindowId: remoteId })
@@ -232,7 +215,7 @@ async function saveWindow({ remoteId, label, range }){
     return res.data.blackoutWindowId
 }
 
-async function handleSaveScheduleSettings(){
+async function handleSaveScheduleSettings() {
     scheduleSaving.value = true
     try {
         sleepWindowId.value = await saveWindow({
@@ -284,14 +267,14 @@ const changePasswordErrors = reactive({
     newPassword: ''
 })
 
-function resetChangePasswordDialog(){
+function resetChangePasswordDialog() {
     changePasswordForm.oldPassword = ''
     changePasswordForm.newPassword = ''
     changePasswordErrors.oldPassword = ''
     changePasswordErrors.newPassword = ''
 }
 
-function resetProfileDialogErrors(){
+function resetProfileDialogErrors() {
     profileErrors.username = ''
     profileErrors.email = ''
 }
@@ -306,11 +289,11 @@ watch(showDialog, (visible) => {
     }
 })
 
-function firstMessage(value){
+function firstMessage(value) {
     return Array.isArray(value) ? value[0] : value
 }
 
-async function handleChangePassword(){
+async function handleChangePassword() {
     changePasswordErrors.oldPassword = ''
     changePasswordErrors.newPassword = ''
     changePasswordLoading.value = true
@@ -338,7 +321,7 @@ async function handleChangePassword(){
     }
 }
 
-async function handleUpdateProfile(){
+async function handleUpdateProfile() {
     profileErrors.username = ''
     profileErrors.email = ''
     profileLoading.value = true
@@ -369,14 +352,14 @@ async function handleUpdateProfile(){
     }
 }
 
-function loadData(){
+function loadData() {
     const userInfo = JSON.parse(localStorage.getItem('lumina_auth_user'))
     form.account = userInfo.account
     form.username = userInfo.username
     form.email = userInfo.email ?? ''
 }
 
-function openDialog(target){
+function openDialog(target) {
     showDialog.value = true
     dialogTarget.value = target
     if (target === 'changeSleepTime') {
@@ -399,50 +382,77 @@ loadData()
 }
 
 .setting-form,
-.setting-group{
+.setting-group {
     width: 80%;
     max-width: 600px;
 }
 
-.setting-block{
+.setting-block {
     border: 1px solid lightgrey;
     padding: 0.8vh 2vw;
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s;
 }
 
-.setting-block:not(:first-child){
+.setting-block:not(:first-child) {
     border-top: none;
 }
 
-.setting-group .setting-block:first-child{
+.setting-group .setting-block:first-child {
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
 }
 
-.setting-group .setting-block:last-child{
+.setting-group .setting-block:last-child {
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
 }
 
-.setting-block:hover{
+.setting-block:hover {
     background-color: #f5f5f5;
     border-color: #c0c4cc;
 }
 
-.segment-row{
+.schedule-row {
     display: flex;
     align-items: center;
     width: 100%;
 }
 
-.segment-range-separator{
+.schedule-row:not(:last-child) {
+    margin-bottom: 1.5vh;
+}
+
+.schedule-row__label {
+    width: 100px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    padding-right: 12px;
+}
+
+.schedule-row__content {
+    flex: 1;
+    min-width: 0;
+}
+
+.segment-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.segment-row > :deep(.van-field) {
+    flex: 1;
+    min-width: 0;
+}
+
+.segment-range-separator {
     margin: 0 0.5vw;
     color: #909399;
     flex-shrink: 0;
 }
 
-.segment-remove{
+.segment-remove {
     margin-left: 0.8vw;
     cursor: pointer;
     color: #f56c6c;
@@ -453,7 +463,7 @@ loadData()
     color: #f56c6c;
 } */
 
-.add-segment{
+.add-segment {
     color: var(--el-color-primary);
     cursor: pointer;
     width: fit-content;
