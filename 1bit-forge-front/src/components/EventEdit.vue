@@ -70,7 +70,7 @@
                 </template>
             </el-form-item>
             <div v-if="form.isRecurringView" class="recurring-banner">
-                此為重複事件，編輯後將轉為單次事件。
+                此為重複事件，編輯後會更新整組重複設定。
             </div>
             <el-form-item label="重複" v-show="!form.isRecurringView">
                 <el-select v-model="form.repeatFrequency" placeholder="please select your zone" style="max-width: 300px"
@@ -403,29 +403,24 @@ async function editEvent() {
     const startsAt = form.timeRange[0]
     const endsAt = form.timeRange[1]
     if (form.isRecurringView) {
-        const deleteRes = await recurringEventApi.deleteRecurringEvent({
+        const params = {
             recurringEventId: form.recurringEventId,
-        })
-        if (deleteRes.message !== 'Success') {
-            return
-        }
-        const createRes = await eventApi.createEvent({
             title: form.title,
             description: form.description,
-            startsAt: startsAt.toISOString(),
-            endsAt: endsAt.toISOString(),
-            priority: form.priority,
-            status: form.status,
+            anchorDate: toDateString(startsAt),
+            startTime: toTimeString(startsAt),
+            endTime: toTimeString(endsAt),
             isFixed: form.isFixed,
-        })
-        if (createRes.message == 'Success') {
+        }
+        if (form.recurrenceEndDate) {
+            params.recurrenceEndDate = toLocalDateString(form.recurrenceEndDate)
+        }
+        const res = await recurringEventApi.editRecurringEvent(params)
+        if (res.message == 'Success') {
             ElMessage({
                 type: 'success',
-                message: '成功將重複事件轉為單次事件',
+                message: '成功更新重複事件',
             })
-            if (form.status === 'todo') {
-                await triggerDayReschedule(startsAt)
-            }
         }
         return
     }
