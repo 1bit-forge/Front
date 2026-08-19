@@ -111,16 +111,16 @@ import PasswordField from '@/components/auth/PasswordField.vue';
 import { changePassword, updateProfile } from '@/api/auth';
 import { ApiError } from '@/api/client';
 import {
-    getBlackoutWindowList,
-    createBlackoutWindow,
-    editBlackoutWindow,
-    deleteBlackoutWindow,
-} from '@/api/blackoutWindow';
+    getRecurringEventList,
+    createRecurringEvent,
+    editRecurringEvent,
+    deleteRecurringEvent,
+} from '@/api/recurringEvent';
 
 const { logout } = useAuth();
 const { isMobile } = useIsMobile();
 
-const SLEEP_BLACKOUT_NAME = '睡眠時間'
+const SLEEP_SEGMENT_TITLE = '睡眠時間'
 
 const showDialog = ref(false)
 const profileLoading = ref(false)
@@ -154,7 +154,7 @@ async function removeTimeSegment(id) {
     const segment = customTimeSegments.value.find(s => s.id === id)
     if (segment?.remoteId) {
         try {
-            await deleteBlackoutWindow({ blackoutWindowId: segment.remoteId })
+            await deleteRecurringEvent({ recurringEventId: segment.remoteId })
         } catch (err) {
             ElMessage.error(err instanceof ApiError ? err.message : '刪除失敗，請稍後再試')
             return
@@ -165,12 +165,12 @@ async function removeTimeSegment(id) {
 
 async function loadScheduleSettings() {
     try {
-        const res = await getBlackoutWindowList()
-        const windows = res.data ?? []
+        const res = await getRecurringEventList()
+        const windows = (res.data ?? []).filter(w => w.repeatFrequency === 'daily')
 
-        const sleepWindow = windows.find(w => w.blackoutName === SLEEP_BLACKOUT_NAME)
+        const sleepWindow = windows.find(w => w.title === SLEEP_SEGMENT_TITLE)
         if (sleepWindow) {
-            sleepWindowId.value = sleepWindow.blackoutWindowId
+            sleepWindowId.value = sleepWindow.recurringEventId
             sleepTimeRange.value = [
                 timeStringToDate(sleepWindow.startTime),
                 timeStringToDate(sleepWindow.endTime),
@@ -181,11 +181,11 @@ async function loadScheduleSettings() {
         }
 
         customTimeSegments.value = windows
-            .filter(w => w.blackoutName !== SLEEP_BLACKOUT_NAME)
+            .filter(w => w.title !== SLEEP_SEGMENT_TITLE)
             .map(w => ({
                 id: nextSegmentId++,
-                remoteId: w.blackoutWindowId,
-                label: w.blackoutName,
+                remoteId: w.recurringEventId,
+                label: w.title,
                 range: [timeStringToDate(w.startTime), timeStringToDate(w.endTime)],
             }))
     } catch (err) {
@@ -193,27 +193,38 @@ async function loadScheduleSettings() {
     }
 }
 
+function todayDateString() {
+    const d = new Date()
+    const pad = n => String(n).padStart(2, '0')
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`
+}
+
 async function saveWindow({ remoteId, label, range }) {
     if (!range?.[0] || !range?.[1]) {
         if (remoteId) {
-            await deleteBlackoutWindow({ blackoutWindowId: remoteId })
+            await deleteRecurringEvent({ recurringEventId: remoteId })
         }
         return null
     }
 
     const payload = {
-        blackoutName: label,
+        title: label,
         startTime: dateToTimeString(range[0]),
         endTime: dateToTimeString(range[1]),
+        anchorDate: todayDateString(),
+        recurrenceEndDate: null,
+        repeatFrequency: 'daily',
+        isFixed: true,
+        display: false,
     }
 
     if (remoteId) {
-        await editBlackoutWindow({ blackoutWindowId: remoteId, ...payload })
+        await editRecurringEvent({ recurringEventId: remoteId, ...payload })
         return remoteId
     }
 
-    const res = await createBlackoutWindow(payload)
-    return res.data.blackoutWindowId
+    const res = await createRecurringEvent(payload)
+    return res.data.recurringEventId
 }
 
 async function handleSaveScheduleSettings() {
@@ -221,7 +232,7 @@ async function handleSaveScheduleSettings() {
     try {
         sleepWindowId.value = await saveWindow({
             remoteId: sleepWindowId.value,
-            label: SLEEP_BLACKOUT_NAME,
+            label: SLEEP_SEGMENT_TITLE,
             range: sleepTimeRange.value,
         })
 

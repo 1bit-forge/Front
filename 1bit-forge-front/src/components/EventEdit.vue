@@ -69,17 +69,24 @@
                     </div>
                 </template>
             </el-form-item>
-            <el-form-item label="重複" >
-                <el-select v-model="form.loop" placeholder="please select your zone" style="max-width: 300px">
-                    <el-option v-for="item in loopOptions" :key="item.value" :label="item.label" :value="item.value" />
+            <div v-if="form.isRecurringView" class="recurring-banner">
+                此為重複事件，編輯後將轉為單次事件。
+            </div>
+            <el-form-item label="重複" v-show="!form.isRecurringView">
+                <el-select v-model="form.repeatFrequency" placeholder="please select your zone" style="max-width: 300px"
+                    :disabled="form.isRecurringView">
+                    <el-option v-for="item in repeatFrequencyOptions" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
             </el-form-item>
-            <el-form-item label="不參與自動重排">
+            <el-form-item label="重複結束日期" v-show="form.repeatFrequency !== 'none' && !form.isRecurringView">
+                <el-date-picker v-model="form.recurrenceEndDate" type="date" placeholder="請選擇重複結束日期" />
+            </el-form-item>
+            <el-form-item label="不參與自動重排" v-show="form.repeatFrequency === 'none' && !form.isRecurringView">
                 <el-checkbox v-model="form.isFixed" />
             </el-form-item>
-            <el-form-item label="事件持續時間" v-show="form.status == 'unscheduled'">
+            <!-- <el-form-item label="事件持續時間" v-show="form.status == 'unscheduled'">
                 <el-input-number v-model="form.estimatedMinutes" :min="0" :step="30" />
-            </el-form-item>
+            </el-form-item> -->
         </el-form>
         <div class="footer">
             <el-button @click="cancelClick">cancel</el-button>
@@ -97,6 +104,7 @@ import { reactive, watch } from 'vue';
 import Btn from './Btn.vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import * as eventApi from '@/api/event';
+import * as recurringEventApi from '@/api/recurringEvent';
 import { useIsMobile } from '@/composables/useIsMobile';
 import MobileDatePickerField from '@/components/common/MobileDatePickerField.vue';
 import MobileTimePickerField from '@/components/common/MobileTimePickerField.vue';
@@ -114,10 +122,12 @@ const props = defineProps({
 
 const form = reactive({
     eventId: '',
+    recurringEventId: '',
+    isRecurringView: false,
     title: '',
     description: '',
     timeRange: null,
-    loop: '',
+    repeatFrequency: '',
     isFixed: true,
     status: '',
     estimatedMinutes: 30,
@@ -126,26 +136,26 @@ const form = reactive({
     priority: 3
 })
 
-const loopOptions = [
+const repeatFrequencyOptions = [
     {
-        value: '不重複',
-        label: 'none',
+        value: 'none',
+        label: '不重複',
     },
     {
-        value: '每天',
-        label: 'everyDay',
+        value: 'daily',
+        label: '每天',
     },
     {
-        value: '每周',
-        label: 'everyWeek',
+        value: 'weekly',
+        label: '每周',
     },
     {
-        value: '每月',
-        label: 'everyMonth',
+        value: 'biweekly',
+        label: '每兩週',
     },
     {
-        value: '每年',
-        label: 'everyYear',
+        value: 'monthly',
+        label: '每月',
     },
 ]
 
@@ -170,14 +180,32 @@ function setTimeRangePart(index, value) {
     form.timeRange = range
 }
 
+function pad2(n) {
+    return String(n).padStart(2, '0')
+}
+
+function toDateString(date) {
+    return `${date.getUTCFullYear()}-${pad2(date.getUTCMonth() + 1)}-${pad2(date.getUTCDate())}`
+}
+
+function toLocalDateString(date) {
+    return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+}
+
+function toTimeString(date) {
+    return `${pad2(date.getUTCHours())}:${pad2(date.getUTCMinutes())}:${pad2(date.getUTCSeconds())}`
+}
+
 function syncFormFromEvent(data) {
     if (!data) {
         Object.assign(form, {
             eventId: '',
+            recurringEventId: '',
+            isRecurringView: false,
             title: '',
             description: '',
             timeRange: null,
-            loop: '不重複',
+            repeatFrequency: 'none',
             isFixed: true,
             status: 'todo',
             estimatedMinutes: 30,
@@ -189,10 +217,13 @@ function syncFormFromEvent(data) {
         })
         return
     }
-    form.eventId = data.eventId ?? ''
+    const isOccurrence = data.type === 'recurring_occurrence'
+    form.eventId = isOccurrence ? '' : (data.eventId ?? '')
+    form.recurringEventId = isOccurrence ? (data.recurringEventId ?? '') : ''
+    form.isRecurringView = isOccurrence
     form.title = data.title ?? ''
     form.description = data.description ?? ''
-    form.loop = data.loop ?? '不重複'
+    form.repeatFrequency = isOccurrence ? 'none' : (data.repeatFrequency ?? 'none')
     form.isFixed = data.isFixed ?? true
     form.timeRange = data.startsAt && data.endsAt
         ? [new Date(data.startsAt), new Date(data.endsAt)]
@@ -238,6 +269,48 @@ function deleteEvent() {
         }
     )
         .then(async () => {
+            if (form.isRecurringView) {
+                if (!form.recurringEventId) {
+                    ElMessage({
+                        type: 'error',
+                        message: '缺少重複事件識別，請從設定頁刪除',
+                    })
+                    return
+                }
+                const res = await recurringEventApi.deleteRecurringEvent({
+                    recurringEventId: form.recurringEventId,
+                })
+                if (res.message == 'Success') {
+                    ElMessage({
+                        type: 'warning',
+                        message: '成功刪除重複事件',
+                    })
+                }
+                emit('loadData')
+                emit('update:drawer', false)
+                return
+            }
+            if (form.repeatFrequency !== 'none') {
+                if (!form.recurringEventId) {
+                    ElMessage({
+                        type: 'error',
+                        message: '缺少重複事件識別，請從設定頁刪除',
+                    })
+                    return
+                }
+                const res = await recurringEventApi.deleteRecurringEvent({
+                    recurringEventId: form.recurringEventId,
+                })
+                if (res.message == 'Success') {
+                    ElMessage({
+                        type: 'warning',
+                        message: '成功刪除重複事件',
+                    })
+                }
+                emit('loadData')
+                emit('update:drawer', false)
+                return
+            }
             const params = {
                 eventId: form.eventId
             }
@@ -283,6 +356,28 @@ async function confirmClick() {
 async function createEvent() {
     const startsAt = form.timeRange[0]
     const endsAt = form.timeRange[1]
+    if (form.repeatFrequency !== 'none') {
+        const params = {
+            title: form.title,
+            description: form.description,
+            anchorDate: toDateString(startsAt),
+            recurrenceEndDate: form.recurrenceEndDate
+                ? toLocalDateString(form.recurrenceEndDate)
+                : null,
+            startTime: toTimeString(startsAt),
+            endTime: toTimeString(endsAt),
+            repeatFrequency: form.repeatFrequency,
+            isFixed: form.isFixed,
+        }
+        const res = await recurringEventApi.createRecurringEvent(params)
+        if (res.message == 'Success') {
+            ElMessage({
+                type: 'success',
+                message: '成功創建重複事件',
+            })
+        }
+        return
+    }
     const params = {
         title: form.title,
         description: form.description,
@@ -307,6 +402,59 @@ async function createEvent() {
 async function editEvent() {
     const startsAt = form.timeRange[0]
     const endsAt = form.timeRange[1]
+    if (form.isRecurringView) {
+        const deleteRes = await recurringEventApi.deleteRecurringEvent({
+            recurringEventId: form.recurringEventId,
+        })
+        if (deleteRes.message !== 'Success') {
+            return
+        }
+        const createRes = await eventApi.createEvent({
+            title: form.title,
+            description: form.description,
+            startsAt: startsAt.toISOString(),
+            endsAt: endsAt.toISOString(),
+            priority: form.priority,
+            status: form.status,
+            isFixed: form.isFixed,
+        })
+        if (createRes.message == 'Success') {
+            ElMessage({
+                type: 'success',
+                message: '成功將重複事件轉為單次事件',
+            })
+            if (form.status === 'todo') {
+                await triggerDayReschedule(startsAt)
+            }
+        }
+        return
+    }
+    if (form.repeatFrequency !== 'none') {
+        const recurringParams = {
+            title: form.title,
+            description: form.description,
+            anchorDate: toDateString(startsAt),
+            recurrenceEndDate: form.recurrenceEndDate
+                ? toLocalDateString(form.recurrenceEndDate)
+                : null,
+            startTime: toTimeString(startsAt),
+            endTime: toTimeString(endsAt),
+            repeatFrequency: form.repeatFrequency,
+            isFixed: form.isFixed,
+        }
+        const deleteRes = await eventApi.deleteEvent({ eventId: form.eventId })
+        if (deleteRes.message !== 'Success') {
+            return
+        }
+        const createRes = await recurringEventApi.createRecurringEvent(recurringParams)
+        if (createRes.message == 'Success') {
+            ElMessage({
+                type: 'success',
+                message: '成功將事件轉為重複事件',
+            })
+        }
+        return
+    }
     const params = {
         eventId: form.eventId,
         title: form.title,
@@ -367,5 +515,15 @@ async function editEvent() {
     display: flex;
     justify-content: end;
     gap: 0.5vw;
+}
+
+.recurring-banner {
+    background: #fdf6ec;
+    border: 1px solid #faecd8;
+    color: #b88230;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    font-size: 13px;
 }
 </style>
