@@ -166,7 +166,7 @@ async function removeTimeSegment(id) {
 async function loadScheduleSettings() {
     try {
         const res = await getRecurringEventList()
-        const windows = (res.data ?? []).filter(w => w.repeatFrequency === 'daily')
+        const windows = (res.data ?? []).filter(w => w.repeatFrequency === 'daily' && w.display === false)
 
         const sleepWindow = windows.find(w => w.title === SLEEP_SEGMENT_TITLE)
         if (sleepWindow) {
