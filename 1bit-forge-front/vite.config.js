@@ -28,6 +28,7 @@ export default defineConfig({
       resolvers: [ElementPlusResolver(), VantResolver()],
     }),
   ],
+  base: process.env.NODE_ENV === 'production' ? '/1bit-forge/Front/' : '/',
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
