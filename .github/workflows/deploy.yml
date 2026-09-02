@@ -31,7 +31,7 @@ jobs:
       - name: Install & Build
         working-directory: 1bit-forge-front # 指定前端目錄
         run: |
-          npm ci
+          npm install
           npm run build
 
       - name: Setup Pages
