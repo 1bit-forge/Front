@@ -30,6 +30,8 @@ jobs:
 
       - name: Install & Build
         working-directory: 1bit-forge-front # 指定前端目錄
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
         run: |
           npm install
           npm run build
