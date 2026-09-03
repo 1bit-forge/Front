@@ -29,7 +29,7 @@ jobs:
           node-version: 20
 
       - name: Install & Build
-        working-directory: 1bit-forge-front # 指定前端目錄
+        working-directory: Front/1bit-forge-front # 指定前端目錄
         env:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
         run: |
@@ -42,7 +42,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 1bit-forge-front/dist # 上傳打包好的 dist 目錄
+          path: Front/1bit-forge-front/dist # 上傳打包好的 dist 目錄
 
       - name: Deploy to GitHub Pages
         id: deployment

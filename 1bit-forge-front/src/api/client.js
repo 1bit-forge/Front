@@ -8,6 +8,7 @@ import {
 import { refreshToken } from '@/api/auth'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
+console.log('Current API Base URL:', BASE_URL)
 
 let refreshPromise = null
 
