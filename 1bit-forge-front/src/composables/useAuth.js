@@ -112,7 +112,7 @@ export function useAuth() {
   function logoutFromComposable() {
     logout()
     clearError()
-    router.replace('/login')
+    router.replace('/')
   }
 
   function setRememberAccount(account, remember) {
