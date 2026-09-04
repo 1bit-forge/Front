@@ -84,11 +84,47 @@
             <el-form-item label="不參與自動重排" v-show="form.repeatFrequency === 'none' && !form.isRecurringView">
                 <el-checkbox v-model="form.isFixed" />
             </el-form-item>
-            <el-form-item label="最早開始時間" v-show="form.isFixed == false && !form.isRecurringView">
-                <el-date-picker v-model="form.earliestStart" type="datetime" format="YYYY-MM-DD HH:mm" placeholder="請選擇最早開始時間" />
+            <el-form-item label="最早開始時間" v-show="form.isFixed == false && !form.isRecurringView && form.repeatFrequency == 'none'">
+                <template v-if="!isMobile">
+                    <el-date-picker v-model="form.earliestStart" type="datetime" format="YYYY-MM-DD HH:mm" placeholder="請選擇最早開始時間" />
+                </template>
+                <template v-else>
+                    <div class="mobile-datetime-range">
+                        <div class="mobile-time-range">
+                            <MobileDatePickerField
+                                :model-value="form.earliestStart ?? null"
+                                @update:model-value="val => setEarliestStartPart(0, val)"
+                                placeholder="Date"
+                            />
+                            <MobileTimePickerField
+                                :model-value="form.earliestStart ?? null"
+                                @update:model-value="val => setEarliestStartPart(1, val)"
+                                placeholder="Time"
+                            />
+                        </div>
+                    </div>
+                </template>
             </el-form-item>
-            <el-form-item label="最晚結束時間" v-show="form.isFixed == false && !form.isRecurringView">
-                <el-date-picker v-model="form.latestEnd" type="datetime" format="YYYY-MM-DD HH:mm" placeholder="請選擇最晚結束時間" />
+            <el-form-item label="最晚結束時間" v-show="form.isFixed == false && !form.isRecurringView && form.repeatFrequency == 'none'">
+                <template v-if="!isMobile">
+                    <el-date-picker v-model="form.latestEnd" type="datetime" format="YYYY-MM-DD HH:mm" placeholder="請選擇最晚結束時間" />
+                </template>
+                <template v-else>
+                    <div class="mobile-datetime-range">
+                        <div class="mobile-time-range">
+                            <MobileDatePickerField
+                                :model-value="form.latestEnd ?? null"
+                                @update:model-value="val => setLatestEndPart(0, val)"
+                                placeholder="Date"
+                            />
+                            <MobileTimePickerField
+                                :model-value="form.latestEnd ?? null"
+                                @update:model-value="val => setLatestEndPart(1, val)"
+                                placeholder="Time"
+                            />
+                        </div>
+                    </div>
+                </template>
             </el-form-item>
             <!-- <el-form-item label="事件持續時間" v-show="form.status == 'unscheduled'">
                 <el-input-number v-model="form.estimatedMinutes" :min="0" :step="30" />
@@ -184,6 +220,26 @@ function setTimeRangePart(index, value) {
     const range = Array.isArray(form.timeRange) ? [...form.timeRange] : [null, null]
     range[index] = value
     form.timeRange = range
+}
+
+function setEarliestStartPart(index, value) {
+    const dt = form.earliestStart ? new Date(form.earliestStart) : new Date()
+    if (index === 0) {
+        dt.setFullYear(value.getFullYear(), value.getMonth(), value.getDate())
+    } else {
+        dt.setHours(value.getHours(), value.getMinutes())
+    }
+    form.earliestStart = dt
+}
+
+function setLatestEndPart(index, value) {
+    const dt = form.latestEnd ? new Date(form.latestEnd) : new Date()
+    if (index === 0) {
+        dt.setFullYear(value.getFullYear(), value.getMonth(), value.getDate())
+    } else {
+        dt.setHours(value.getHours(), value.getMinutes())
+    }
+    form.latestEnd = dt
 }
 
 function pad2(n) {
