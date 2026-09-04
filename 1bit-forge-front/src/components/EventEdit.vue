@@ -84,6 +84,12 @@
             <el-form-item label="不參與自動重排" v-show="form.repeatFrequency === 'none' && !form.isRecurringView">
                 <el-checkbox v-model="form.isFixed" />
             </el-form-item>
+            <el-form-item label="最早開始時間" v-show="form.isFixed == false && !form.isRecurringView">
+                <el-date-picker v-model="form.earliestStart" type="datetime" format="YYYY-MM-DD HH:mm" placeholder="請選擇最早開始時間" />
+            </el-form-item>
+            <el-form-item label="最晚結束時間" v-show="form.isFixed == false && !form.isRecurringView">
+                <el-date-picker v-model="form.latestEnd" type="datetime" format="YYYY-MM-DD HH:mm" placeholder="請選擇最晚結束時間" />
+            </el-form-item>
             <!-- <el-form-item label="事件持續時間" v-show="form.status == 'unscheduled'">
                 <el-input-number v-model="form.estimatedMinutes" :min="0" :step="30" />
             </el-form-item> -->
@@ -239,6 +245,15 @@ function syncFormFromEvent(data) {
 
 watch(() => props.eventData, syncFormFromEvent, { immediate: true })
 
+watch(() => form.timeRange, (newRange) => {
+    if (newRange && newRange[0] && !form.earliestStart) {
+        form.earliestStart = newRange[0]
+    }
+    if (newRange && newRange[1] && !form.latestEnd) {
+        form.latestEnd = newRange[1]
+    }
+}, { immediate: true })
+
 async function triggerDayReschedule(startsAt) {
     // 計算當地日期的 [00:00, 24:00) 作為重排範圍
     const dayStart = new Date(startsAt)
@@ -385,7 +400,9 @@ async function createEvent() {
         endsAt: endsAt.toISOString(),
         priority: form.priority,
         status: form.status,
-        isFixed: form.isFixed
+        isFixed: form.isFixed,
+        earliestStart: form.earliestStart ? form.earliestStart.toISOString() : null,
+        latestEnd: form.latestEnd ? form.latestEnd.toISOString() : null,
     }
     const res = await eventApi.createEvent(params)
     if (res.message == 'Success') {
@@ -458,7 +475,9 @@ async function editEvent() {
         endsAt: endsAt.toISOString(),
         priority: form.priority,
         status: form.status,
-        isFixed: form.isFixed
+        isFixed: form.isFixed,
+        earliestStart: form.earliestStart ? form.earliestStart.toISOString() : null,
+        latestEnd: form.latestEnd ? form.latestEnd.toISOString() : null,
     }
     const res = await eventApi.editEvent(params)
     if (res.message == 'Success') {
