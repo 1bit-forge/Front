@@ -2,7 +2,7 @@ name: Deploy Frontend to GitHub Pages
 
 on:
   push:
-    branches: [ develop, main ] # 推送到這些分支時自動執行
+    branches: [ main ] # 推送到這些分支時自動執行
 
 permissions:
   contents: read
